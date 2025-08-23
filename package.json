@@ -10,7 +10,9 @@
     "db:test": "node -r dotenv/config scripts/test-mysql-connection.js",
     "db:test-simple": "node scripts/test-mysql-simple.js",
     "env:check": "node scripts/check-env.js",
-    "env:debug": "curl http://localhost:3000/api/debug/env || echo 'Server not running'"
+    "env:debug": "curl http://localhost:3000/api/debug/env || echo 'Server not running'",
+    "daily-sales-reset": "node scripts/daily-sales-reset.js",
+    "test-daily-reset": "node scripts/test-daily-reset.js"
   },
   "dependencies": {
     "@planetscale/database": "^1.19.0",

@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
@@ -48,12 +49,22 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body: CreateOrderRequest = await request.json();
-    const orderId = uuidv4();
+    const orderId = uuidv4(); // Generate unique order ID
+    const currentDate = new Date();
+    const today = currentDate.toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+
+    // Fetch the last order number for today
+    const lastOrderQuery = 'SELECT MAX(order_number) AS last_order_number FROM orders WHERE DATE(order_time) = ?';
+    const lastOrderResult: any[] = await executeQuery(lastOrderQuery, [today]) as any[];
+    const lastOrderNumber = lastOrderResult[0]?.last_order_number || '0'; // Default to '0' if no orders exist
+
+    // Increment the order number
+    const newOrderNumber = (parseInt(lastOrderNumber) + 1).toString().padStart(3, '0'); // Pad to 3 digits
 
     // Set initial status to 'preparing'
     await executeQuery(
       'INSERT INTO orders (id, order_number, items, total, status) VALUES (?, ?, ?, ?, ?)',
-      [orderId, body.order_number, JSON.stringify(body.items), body.total, 'preparing']
+      [orderId, newOrderNumber, JSON.stringify(body.items), body.total, 'preparing']
     );
 
     return NextResponse.json({ id: orderId, success: true });

@@ -103,3 +103,72 @@ For Vercel deployment, set the environment variable in your Vercel project setti
 - `DATABASE_URL`: Your PlanetScale database connection string
 
 The `vercel.json` file is configured to use `@database-url` which should be set up in your Vercel environment variables.
+
+
+final version 23AUG 25 mysql> show tables;
++------------------------+
+| Tables_in_cafe_node_db |
++------------------------+
+| daily_sales            |
+| menu_items             |
+| orders                 |
+| sales_history          |
++------------------------+
+4 rows in set (0.00 sec)
+
+
+mysql> desc daily_sales;
++---------------+---------------+------+-----+-------------------+-----------------------------------------------+
+| Field         | Type          | Null | Key | Default           | Extra                                         |
++---------------+---------------+------+-----+-------------------+-----------------------------------------------+
+| id            | int           | NO   | PRI | NULL              | auto_increment                                |
+| sale_date     | date          | NO   | UNI | NULL              |                                               |
+| total_orders  | int           | YES  |     | 0                 |                                               |
+| total_revenue | decimal(12,2) | YES  |     | 0.00              |                                               |
+| updated_at    | timestamp     | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED on update CURRENT_TIMESTAMP |
++---------------+---------------+------+-----+-------------------+-----------------------------------------------+
+5 rows in set (0.00 sec)
+
+mysql> desc menu_items;
++--------------+--------------+------+-----+-------------------+-------------------+
+| Field        | Type         | Null | Key | Default           | Extra             |
++--------------+--------------+------+-----+-------------------+-------------------+
+| id           | int          | NO   | PRI | NULL              | auto_increment    |
+| name         | varchar(250) | NO   |     | NULL              |                   |
+| price        | decimal(8,2) | NO   |     | NULL              |                   |
+| is_available | tinyint(1)   | YES  | MUL | 1                 |                   |
+| category     | varchar(50)  | YES  | MUL | NULL              |                   |
+| created_at   | timestamp    | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED |
++--------------+--------------+------+-----+-------------------+-------------------+
+6 rows in set (0.01 sec)
+
+mysql> desc orders;
++--------------+----------------------------------------------------------+------+-----+-------------------+-----------------------------------------------+
+| Field        | Type                                                     | Null | Key | Default           | Extra                                         |
++--------------+----------------------------------------------------------+------+-----+-------------------+-----------------------------------------------+
+| id           | varchar(36)                                              | NO   | PRI | NULL              |                                               |
+| order_number | varchar(10)                                              | NO   |     | NULL              |                                               |
+| items        | json                                                     | NO   |     | NULL              |                                               |
+| total        | decimal(10,2)                                            | NO   |     | NULL              |                                               |
+| status       | enum('pending','preparing','ready','served','cancelled') | YES  | MUL | pending           |                                               |
+| order_time   | timestamp                                                | YES  | MUL | CURRENT_TIMESTAMP | DEFAULT_GENERATED                             |
+| updated_time | timestamp                                                | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED on update CURRENT_TIMESTAMP |
++--------------+----------------------------------------------------------+------+-----+-------------------+-----------------------------------------------+
+7 rows in set (0.00 sec)
+
+mysql> desc sales_history;
++---------------+---------------+------+-----+-------------------+-------------------+
+| Field         | Type          | Null | Key | Default           | Extra             |
++---------------+---------------+------+-----+-------------------+-------------------+
+| id            | int           | NO   | PRI | NULL              | auto_increment    |
+| sale_date     | date          | NO   | MUL | NULL              |                   |
+| total_orders  | int           | NO   |     | NULL              |                   |
+| total_revenue | decimal(12,2) | NO   |     | NULL              |                   |
+| archived_at   | timestamp     | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED |
++---------------+---------------+------+-----+-------------------+-------------------+
+5 rows in set (0.01 sec)
+
+mysql>
+
+
+SHOW CREATE TABLE daily_sales;

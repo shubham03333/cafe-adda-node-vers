@@ -19,22 +19,23 @@ CREATE TABLE menu_items (
   price DECIMAL(8,2) NOT NULL,
   is_available BOOLEAN DEFAULT TRUE,
   category VARCHAR(50),
+  position INT DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert sample menu data
-INSERT INTO menu_items (id, name, price, category) VALUES
-(1, 'Special Veg Munch Roll ', 40.00, 'Main Course'),
-(2, 'Veg Manchurian Bhel', 35.00, 'Main Course'),
-(3, 'Veg Manchurian Paav ', 25.00, 'Main Course'),
-(4, 'Special Veg Munch CHEESE Roll ', 50.00, 'Main Course'),
-(5, 'Chilax Cold Coffee', 40.00, 'Beverages'),
-(6, 'Veg Peri Peri Manchurian', 25.00, 'Main Course'),
-(7, 'Veg Masala Manchurian', 35.00, 'Main Course');
-(8, 'Chilax Cold COCOA', 40.00, 'Beverages'),
-(9, 'Special DahiVada', 40.00, 'Main Course'),
-(10, 'Roll+Manchurian+Cold Cofee Platters', 99.00, 'Main Course'),
-(11, 'Tea', 10.00, 'Beverages');
+-- Insert sample menu data with positions
+INSERT INTO menu_items (id, name, price, category, position) VALUES
+(1, 'Special Veg Munch Roll ', 40.00, 'Main Course', 1),
+(2, 'Veg Manchurian Bhel', 35.00, 'Main Course', 2),
+(3, 'Veg Manchurian Paav ', 25.00, 'Main Course', 3),
+(4, 'Special Veg Munch CHEESE Roll ', 50.00, 'Main Course', 4),
+(5, 'Chilax Cold Coffee', 40.00, 'Beverages', 1),
+(6, 'Veg Peri Peri Manchurian', 25.00, 'Main Course', 5),
+(7, 'Veg Masala Manchurian', 35.00, 'Main Course', 6),
+(8, 'Chilax Cold COCOA', 40.00, 'Beverages', 2),
+(9, 'Special DahiVada', 40.00, 'Main Course', 7),
+(10, 'Adda Special Combo', 99.00, 'Main Course', 8),
+(11, 'Tea', 10.00, 'Beverages', 3);
 
 
 -- Create daily sales table
