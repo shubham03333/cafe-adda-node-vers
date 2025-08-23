@@ -41,7 +41,7 @@ mysql -u root
 
 # Reset password
 FLUSH PRIVILEGES;
-ALTER USER 'root'@'%' IDENTIFIED BY 'new-password-here';
+ALTER USER 'root'@'%' IDENTIFIED BY 'Sbmntn@2';
 FLUSH PRIVILEGES;
 
 # Exit and restart MySQL

@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { executeQuery } from '@/lib/db';
 
 export async function GET() {
   try {
-    const [rows] = await db.execute(
+    const rows = await executeQuery(
       'SELECT * FROM daily_sales ORDER BY sale_date DESC'
     );
 

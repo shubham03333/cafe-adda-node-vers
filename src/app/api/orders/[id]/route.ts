@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { executeQuery } from '@/lib/db';
 import { UpdateOrderRequest } from '@/types';
 // PUT update order
 export async function PUT(
@@ -37,7 +37,7 @@ export async function PUT(
 
     values.push(id);
 
-    await db.execute(
+    await executeQuery(
       `UPDATE orders SET ${updateFields.join(', ')} WHERE id = ?`,
       values
     );
@@ -45,16 +45,16 @@ export async function PUT(
     // If status is being updated to "served", update daily sales
     if (body.status === 'served') {
       // Get the order total first
-      const [orderRows] = await db.execute(
+      const orderRows = await executeQuery(
         'SELECT total FROM orders WHERE id = ?',
         [id]
-      );
+      ) as any[];
       
-      if (orderRows && (orderRows as any[]).length > 0) {
-        const orderTotal = (orderRows as any[])[0].total;
+      if (orderRows && orderRows.length > 0) {
+        const orderTotal = orderRows[0].total;
         const today = new Date().toISOString().split('T')[0];
         
-        await db.execute(`
+        await executeQuery(`
           INSERT INTO daily_sales (sale_date, total_orders, total_revenue) 
           VALUES (?, 1, ?) 
           ON DUPLICATE KEY UPDATE 
@@ -82,7 +82,7 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    await db.execute('DELETE FROM orders WHERE id = ?', [id]);
+    await executeQuery('DELETE FROM orders WHERE id = ?', [id]);
 
     return NextResponse.json({ success: true });
   } catch (error) {

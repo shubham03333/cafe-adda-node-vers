@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { executeQuery } from '@/lib/db';
 
 export async function GET() {
   try {
-    const [rows] = await db.execute(
+    const rows = await executeQuery(
       'SELECT * FROM menu_items WHERE is_available = TRUE ORDER BY category, name'
     );
 

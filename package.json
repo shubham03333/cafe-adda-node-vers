@@ -6,7 +6,11 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:test": "node -r dotenv/config scripts/test-mysql-connection.js",
+    "db:test-simple": "node scripts/test-mysql-simple.js",
+    "env:check": "node scripts/check-env.js",
+    "env:debug": "curl http://localhost:3000/api/debug/env || echo 'Server not running'"
   },
   "dependencies": {
     "@planetscale/database": "^1.19.0",
