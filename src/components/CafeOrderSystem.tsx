@@ -14,6 +14,15 @@ const CafeOrderSystem = () => {
   const [dailySales, setDailySales] = useState(0);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
+  
+  const closeOrderPopup = () => {
+    setViewingOrder(null);
+  };
+  
+  const handleOrderClick = (order: Order) => {
+    setViewingOrder(order);
+  };
   
   // Sales report modal state
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -21,10 +30,18 @@ const CafeOrderSystem = () => {
   const [endDate, setEndDate] = useState('');
   const [salesReport, setSalesReport] = useState<any>(null);
 
-  // Fetch menu items
+  // Fetch menu items and set up real-time updates
   useEffect(() => {
     fetchMenu();
     fetchOrders();
+    
+    // Set up polling for real-time updates
+    const pollingInterval = setInterval(() => {
+      fetchOrders();
+    }, 3000); // Poll every 3 seconds
+    
+    // Clean up interval on component unmount
+    return () => clearInterval(pollingInterval);
   }, []);
 
   const fetchMenu = async () => {
@@ -61,21 +78,28 @@ const CafeOrderSystem = () => {
     }
   };
 
+  const ordersContainerRef = useRef<HTMLDivElement>(null);
+
   const fetchOrders = async () => {
+    const scrollPosition = ordersContainerRef.current?.scrollTop || 0; // Store current scroll position
     try {
-      const response = await fetch('/api/orders');
-      if (!response.ok) throw new Error('Failed to fetch orders');
-      const data = await response.json();
-      setOrders(data);
-      
-      // Calculate pending orders count (orders that are not served)
-      const pendingOrders = data.filter((order: Order) => order.status !== 'served');
-      setPendingOrdersCount(pendingOrders.length);
-      
-      // Fetch daily sales from API instead of calculating locally
-      await fetchDailySales();
-      
-      setLoading(false);
+    const response = await fetch('/api/orders');
+    if (!response.ok) throw new Error('Failed to fetch orders');
+    const data = await response.json();
+    setOrders(data);
+    
+    // Calculate pending orders count (orders that are not served)
+    const pendingOrders = data.filter((order: Order) => order.status !== 'served');
+    setPendingOrdersCount(pendingOrders.length);
+    
+    // Fetch daily sales from API instead of calculating locally
+    await fetchDailySales();
+    
+    setLoading(false);
+    
+    if (ordersContainerRef.current) {
+        ordersContainerRef.current.scrollTop = scrollPosition; // Restore scroll position
+    }
     } catch (err) {
       setError('Failed to load orders');
       setLoading(false);
@@ -418,27 +442,35 @@ const CafeOrderSystem = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-4 max-w-md mx-auto">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
-        <div className="flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-800">Adda®️ Dash.</h1>
-          <div className="text-right">
-            <div className="flex items-center gap-6">
-              <div>
-                <div className="text-sm text-gray-600">Pending Orders</div>
-                <div className="text-lg font-bold text-orange-600">{pendingOrdersCount}</div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-600">Today's Sales</div>
-                <div className="text-lg font-bold text-green-600">₹{dailySales}</div>
-              </div>
-              <button
-                onClick={openReportModal}
-                className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                title="Sales Report"
-              >
-                <BarChart3 className="w-5 h-5" />
-              </button>
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg p-4 mb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold text-white">Adda®️ Dash.</h1>
+          </div>
+          <div className="flex items-center gap-3">
+            <a 
+              href="/chef" 
+              className="p-2 bg-white text-blue-600 rounded-lg text-sm hover:bg-gray-100 transition-colors shadow-md flex items-center gap-1"
+              title="Chef Dashboard"
+            >
+              <span className="hidden sm:inline"></span>
+              👨‍🍳
+            </a>
+            <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2">
+              <div className="text-xs text-white/90">Pending</div>
+              <div className="text-lg font-bold text-white">{pendingOrdersCount}</div>
             </div>
+            <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2">
+              <div className="text-xs text-white/90">Sales</div>
+              <div className="text-lg font-bold text-white">₹{dailySales}</div>
+            </div>
+            <button
+              onClick={openReportModal}
+              className="p-2 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-colors shadow-md"
+              title="Sales Report"
+            >
+              <BarChart3 className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </div>
@@ -575,63 +607,82 @@ const CafeOrderSystem = () => {
       )}
 
       {/* Menu Grid */}
-      <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
-        <h2 className="font-semibold text-gray-800 mb-3">Menu Items</h2>
+      <div className="bg-white rounded-lg shadow-lg p-4 mb-4">
+        <h2 className="font-semibold text-gray-800 mb-4 text-lg">Menu Items</h2>
         <div className="grid grid-cols-2 gap-3">
           {menuItems.map(item => (
             <button
               key={item.id}
               onClick={() => addToOrder(item, 1)}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg text-center font-medium min-h-[80px] flex flex-col justify-center transition-all duration-200 hover:scale-105"
+              className="w-full bg-gradient-to-br from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white p-4 rounded-lg text-center font-medium min-h-[90px] flex flex-col justify-center transition-all duration-300 hover:scale-105 shadow-md hover:shadow-lg"
             >
               <div className="font-semibold text-sm leading-tight px-1 overflow-hidden" style={{ 
                 display: '-webkit-box',
                 WebkitLineClamp: 2,
                 WebkitBoxOrient: 'vertical'
               }}>{item.name}</div>
-              <div className="text-xs opacity-90 mt-1">₹{item.price}</div>
+              <div className="text-xs opacity-90 mt-2 bg-white/20 rounded px-1 py-0.5">₹{item.price}</div>
             </button>
           ))}
         </div>
       </div>
 
       {/* Order Queue */}
-      <div className="bg-white rounded-lg shadow-sm p-4">
-        <h2 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-          <Clock className="w-5 h-5" />
+      <div className="bg-white rounded-lg shadow-lg p-4">
+        <h2 className="font-semibold text-gray-800 mb-4 text-lg flex items-center gap-2">
+          <Clock className="w-6 h-6 text-blue-600" />
           Order Queue ({orders.length})
         </h2>
         
         {orders.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <ChefHat className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <div>No orders in queue</div>
+          <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-lg">
+            <ChefHat className="w-16 h-16 mx-auto mb-4 opacity-50" />
+            <div className="text-lg">No orders in queue</div>
+            <div className="text-sm mt-2">Start building orders from the menu!</div>
           </div>
         ) : (
-          <ScrollableSection maxHeight="400px" className="mt-2">
-            <div className="space-y-3 pr-1">
+          <div ref={ordersContainerRef} className="mt-2" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            <div className="space-y-4 pr-1">
               {orders.map(order => (
-                <div key={order.id} className="p-4 rounded-lg border-l-4 border-orange-600 bg-orange-100">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-5 h-5 text-orange-800" />
-                      <span className="font-bold text-lg text-orange-900">#{order.order_number}</span>
+                <div 
+                  key={order.id} 
+                  className="p-5 rounded-lg border-l-4 border-blue-500 bg-gradient-to-r from-blue-50 to-white shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer"
+                  onClick={() => handleOrderClick(order)}
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-3">
+                      <Clock className="w-6 h-6 text-blue-700" />
+                      <span className="font-bold text-xl text-blue-900">#{order.order_number}</span>
+                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                        order.status === 'preparing' 
+                          ? 'bg-yellow-200 text-yellow-900' 
+                          : order.status === 'ready' 
+                          ? 'bg-green-200 text-green-900'
+                          : order.status === 'served'
+                          ? 'bg-blue-200 text-blue-900'
+                          : 'bg-orange-200 text-orange-900'
+                      }`}>
+                        {order.status}
+                      </span>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-orange-900">₹{order.total}</div>
+                      <div className="font-bold text-xl text-blue-900">₹{order.total}</div>
                     </div>
                   </div>
                   
-                  <div className="mb-3">
+                  <div className="mb-4">
                     {order.items.map(item => (
-                      <div key={item.id} className="flex justify-between items-center text-sm text-orange-800 py-1">
-                        <span>{item.quantity}x {item.name}</span>
+                      <div key={item.id} className="flex justify-between items-center text-sm text-blue-800 py-2 border-b border-blue-100 last:border-b-0">
+                        <span className="font-medium">{item.quantity}x {item.name}</span>
                         <button
-                          onClick={() => removeItemFromOrder(order.id, item.id)}
-                          className="p-1 text-red-600 hover:text-red-800 hover:bg-red-100 rounded"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeItemFromOrder(order.id, item.id);
+                          }}
+                          className="p-2 text-red-600 hover:text-red-800 hover:bg-red-100 rounded-full transition-colors"
                           title="Remove item"
                         >
-                          <Trash2 className="w-3 h-3" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     ))}
@@ -639,30 +690,41 @@ const CafeOrderSystem = () => {
                   
                   <div className="flex gap-2">
                     <button
-                      onClick={() => editOrder(order)}
-                      className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        editOrder(order);
+                      }}
+                      className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-1 text-sm"
                       title="Edit order"
                     >
-                      <Edit2 className="w-4 h-4" />
+                      <Edit2 className="w-3 h-3" />
+                      Edit
                     </button>
                     <button
-                      onClick={() => updateOrderStatus(order.id, 'served')}
-                      className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-medium"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateOrderStatus(order.id, 'served');
+                      }}
+                      className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors text-sm"
                     >
                       Served
                     </button>
                     <button
-                      onClick={() => deleteOrder(order.id)}
-                      className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteOrder(order.id);
+                      }}
+                      className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center gap-1 text-sm"
                       title="Delete order"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3 h-3" />
+                      Delete
                     </button>
                   </div>
                 </div>
               ))}
             </div>
-          </ScrollableSection>
+          </div>
         )}
       </div>
 
@@ -729,7 +791,7 @@ const CafeOrderSystem = () => {
                   {salesReport.daily_sales && salesReport.daily_sales.length > 0 && (
                     <div>
                       <h4 className="font-medium text-gray-900 mb-2">Daily Breakdown:</h4>
-                      <ScrollableSection maxHeight="200px">
+                      <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                         <div className="space-y-2">
                           {salesReport.daily_sales.map((day: any) => (
                             <div key={day.date} className="flex justify-between items-center p-2 bg-gray-50 rounded">
@@ -738,7 +800,7 @@ const CafeOrderSystem = () => {
                             </div>
                           ))}
                         </div>
-                      </ScrollableSection>
+                      </div>
                     </div>
                   )}
                   
@@ -758,6 +820,65 @@ const CafeOrderSystem = () => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Order Detail Popup */}
+      {viewingOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-5 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto shadow-xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Order #{viewingOrder.order_number}</h2>
+              <button
+                onClick={closeOrderPopup}
+                className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="mb-4">
+              <div className="flex justify-between items-center mb-3">
+                <span className="font-semibold text-gray-900">Status:</span>
+                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                  viewingOrder.status === 'preparing' 
+                    ? 'bg-yellow-200 text-yellow-900' 
+                    : viewingOrder.status === 'ready' 
+                    ? 'bg-green-200 text-green-900'
+                    : viewingOrder.status === 'served'
+                    ? 'bg-blue-200 text-blue-900'
+                    : 'bg-orange-200 text-orange-900'
+                }`}>
+                  {viewingOrder.status}
+                </span>
+              </div>
+              
+              <div className="flex justify-between items-center mb-3">
+                <span className="font-semibold text-gray-900">Total:</span>
+                <span className="font-bold text-xl text-blue-900">₹{viewingOrder.total}</span>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <h3 className="font-semibold text-gray-900 mb-3">Items:</h3>
+              {viewingOrder.items.map(item => (
+                <div key={item.id} className="flex justify-between items-center py-2 border-b border-gray-200">
+                  <span className="text-gray-900 font-medium">{item.quantity}x {item.name}</span>
+                  <span className="font-medium text-gray-900">₹{item.price * item.quantity}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-gray-200 pt-4">
+              <button
+                onClick={closeOrderPopup}
+                className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

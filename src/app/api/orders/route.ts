@@ -3,12 +3,19 @@ import { executeQuery } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateOrderRequest, Order } from '@/types';
 
-// GET all orders
-export async function GET() {
+// GET all orders with optional status filtering
+export async function GET(request: NextRequest) {
   try {
-    const rows = await executeQuery(
-      'SELECT * FROM orders WHERE status != "served" ORDER BY order_time ASC'
-    ) as any[];
+    const { searchParams } = new URL(request.url);
+    const statusFilter = searchParams.get('status') || '';
+    
+    let query = 'SELECT * FROM orders WHERE status != "served"';
+    if (statusFilter) {
+      query += ` AND status IN (${statusFilter})`;
+    }
+    query += ' ORDER BY order_time ASC';
+
+    const rows = await executeQuery(query) as any[];
 
     const orders = rows.map(row => {
       // Check if items is already an object or needs parsing
@@ -38,15 +45,15 @@ export async function GET() {
   }
 }
 
-// POST new order
 export async function POST(request: NextRequest) {
   try {
     const body: CreateOrderRequest = await request.json();
     const orderId = uuidv4();
 
+    // Set initial status to 'preparing'
     await executeQuery(
-      'INSERT INTO orders (id, order_number, items, total) VALUES (?, ?, ?, ?)',
-      [orderId, body.order_number, JSON.stringify(body.items), body.total]
+      'INSERT INTO orders (id, order_number, items, total, status) VALUES (?, ?, ?, ?, ?)',
+      [orderId, body.order_number, JSON.stringify(body.items), body.total, 'preparing']
     );
 
     return NextResponse.json({ id: orderId, success: true });

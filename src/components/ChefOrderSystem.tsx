@@ -1,0 +1,127 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { Order } from '@/types';
+import { Clock } from 'lucide-react';
+
+const ChefOrderSystem = () => {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch orders for chefs with real-time updates
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await fetch('/api/orders/chef');
+        if (!response.ok) throw new Error('Failed to fetch orders');
+        const data = await response.json();
+        setOrders(data);
+      } catch (err) {
+        setError('Failed to load orders');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+    
+    // Set up polling for real-time updates
+    const pollingInterval = setInterval(() => {
+      fetchOrders();
+    }, 3000); // Poll every 3 seconds
+    
+    // Clean up interval on component unmount
+    return () => clearInterval(pollingInterval);
+  }, []);
+
+  const markAsPrepared = async (orderId: string) => {
+    try {
+      const response = await fetch(`/api/orders/${orderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'ready' })
+      });
+
+      if (!response.ok) throw new Error('Failed to update order status');
+      setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
+    } catch (err) {
+      setError('Failed to mark order as prepared');
+      console.error(err);
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center text-lg font-semibold">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-600 text-lg font-semibold">{error}</div>;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100 p-4 max-w-md mx-auto">
+      {/* Header */}
+      <div className="bg-blue-600 rounded-lg shadow-lg p-4 mb-4">
+        <div className="flex justify-between items-center">
+          <h1 className="text-xl font-bold text-gray-800">👨‍🍳 Chef Dashboard</h1>
+            <a 
+              href="/" 
+              className="px-3 py-1 bg-blue-700 text-white rounded text-sm hover:bg-blue-800 transition-colors"
+          >
+            View Dashbord
+          </a>
+        </div>
+      </div>
+
+      {/* Orders Queue */}
+      <div className="bg-white rounded-lg shadow-sm p-4">
+        <h2 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+          <Clock className="w-5 h-5" />
+          Order Queue ({orders.length})
+        </h2>
+        
+        {orders.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <Clock className="w-12 h-12 mx-auto mb-2 opacity-50" />
+            <div>No orders in queue</div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {orders.map(order => (
+              <div key={order.id} className="p-4 rounded-lg border-l-4 border-orange-600 bg-orange-100 shadow-md transition-shadow hover:shadow-lg">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-orange-800" />
+                    <span className="font-bold text-lg text-orange-900">#{order.order_number}</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-orange-900">₹{order.total}</div>
+                  </div>
+                </div>
+                
+                <div className="mb-3">
+                  {order.items.map(item => (
+                    <div key={item.id} className="flex justify-between items-center text-sm text-orange-800 py-1">
+                      <span>{item.quantity}x {item.name}</span>
+                    </div>
+                  ))}
+                </div>
+                
+                <button
+                  onClick={() => markAsPrepared(order.id)}
+                  className="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded font-medium transition-colors"
+                >
+                  ✅ Mark as Prepared
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ChefOrderSystem;
