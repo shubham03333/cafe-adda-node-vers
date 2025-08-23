@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const updatedItem = await request.json();
     const { name, price, category, is_available } = updatedItem;
+    const { id } = await params;
 
     if (!db) {
       throw new Error('Database not configured');
@@ -12,7 +16,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
     await db.execute(
       'UPDATE menu_items SET name = ?, price = ?, category = ?, is_available = ? WHERE id = ?',
-      [name, price, category, is_available, params.id]
+      [name, price, category, is_available, id]
     );
 
     return NextResponse.json({ success: true });
@@ -25,15 +29,20 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id } = await params;
+
     if (!db) {
       throw new Error('Database not configured');
     }
 
     await db.execute(
       'DELETE FROM menu_items WHERE id = ?',
-      [params.id]
+      [id]
     );
 
     return NextResponse.json({ success: true });
