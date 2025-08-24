@@ -4,10 +4,7 @@
 require('dotenv').config({ path: '.env.local' });
 
 // Import the database connection test
-async function getTestConnection() {
-  const { testMySQLConnection } = await import('./test-mysql-connection.js');
-  return testMySQLConnection;
-}
+const { testConnection } = require('./db-utils.js');
 
 // Import the reset function
 async function getResetFunction() {
@@ -18,19 +15,18 @@ async function getResetFunction() {
 async function testDailyReset() {
   console.log('🧪 Testing Daily Sales Reset Functionality...');
   
-  const testConnection = await getTestConnection();
   const resetDailySales = await getResetFunction();
   
   // First test the connection
-  const connected = await testConnection();
-  if (!connected) {
-    console.log('❌ Database connection failed');
+  const connectionResult = await testConnection();
+  if (!connectionResult.success) {
+    console.log('❌ Database connection failed:', connectionResult.error);
     return;
   }
 
   try {
     console.log('🔧 Testing timezone utilities...');
-    const { getTodayISTDateString, getYesterdayISTDateString, formatISTDateTime } = await import('../src/lib/timezone.ts');
+    const { getTodayISTDateString, getYesterdayISTDateString, formatISTDateTime } = require('./timezone-utils.js');
     
     const today = getTodayISTDateString();
     const yesterday = getYesterdayISTDateString();

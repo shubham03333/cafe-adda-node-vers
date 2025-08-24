@@ -10,13 +10,29 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const statusFilter = searchParams.get('status') || '';
     
-    let query = 'SELECT * FROM orders WHERE status != "served"';
+    const includeServed = searchParams.get('includeServed') === 'true';
+    let query = 'SELECT * FROM orders';
+    let whereClauses = [];
+    
+    if (!includeServed) {
+        whereClauses.push("status != 'served'");
+    }
+    
+    const validStatuses = ['pending', 'preparing', 'ready', 'served', 'cancelled'];
     if (statusFilter) {
-      query += ` AND status IN (${statusFilter})`;
+        const statuses = statusFilter.split(',').filter(status => validStatuses.includes(status.trim()));
+        if (statuses.length > 0) {
+            whereClauses.push(`status IN ('${statuses.join("', '")}')`);
+        }
+    }
+    
+    if (whereClauses.length > 0) {
+        query += ' WHERE ' + whereClauses.join(' AND ');
     }
     query += ' ORDER BY order_time ASC';
 
     const rows = await executeQuery(query) as any[];
+    console.log("Raw orders fetched from database:", rows);
 
     const orders = rows.map(row => {
       // Check if items is already an object or needs parsing
@@ -67,7 +83,7 @@ export async function POST(request: NextRequest) {
       [orderId, newOrderNumber, JSON.stringify(body.items), body.total, 'preparing']
     );
 
-    return NextResponse.json({ id: orderId, success: true });
+    return NextResponse.json({ id: orderId, success: true, order_number: newOrderNumber });
   } catch (error) {
     console.error('Error creating order:', error);
     return NextResponse.json(

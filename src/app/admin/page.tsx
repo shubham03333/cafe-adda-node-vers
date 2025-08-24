@@ -1,3 +1,16 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -19,6 +32,9 @@ const AdminControlPanel = () => {
     category: '',
     is_available: true
   });
+  const [todaysSales, setTodaysSales] = useState({ total_orders: 0, total_revenue: 0 });
+  const [totalRevenue, setTotalRevenue] = useState({ total_orders: 0, total_revenue: 0 });
+  const [salesLoading, setSalesLoading] = useState(false);
 
   // Fetch menu items
   const fetchMenu = async () => {
@@ -35,8 +51,69 @@ const AdminControlPanel = () => {
     }
   };
 
+  // Fetch today's sales
+  const fetchTodaysSales = async () => {
+    setSalesLoading(true);
+    try {
+      const response = await fetch('/api/daily-sales/today');
+      if (!response.ok) throw new Error('Failed to fetch today\'s sales');
+      const data = await response.json();
+      setTodaysSales(data);
+    } catch (err) {
+      setError('Failed to load today\'s sales');
+      console.error(err);
+    } finally {
+      setSalesLoading(false);
+    }
+  };
+
+  // Fetch total revenue
+  const fetchTotalRevenue = async () => {
+    setSalesLoading(true);
+    try {
+      const response = await fetch('/api/total-revenue');
+      if (!response.ok) throw new Error('Failed to fetch total revenue');
+      const data = await response.json();
+      setTotalRevenue(data);
+    } catch (err) {
+      setError('Failed to load total revenue');
+      console.error(err);
+    } finally {
+      setSalesLoading(false);
+    }
+  };
+
+  // Fetch all sales data
+  const fetchSalesData = async () => {
+    await Promise.all([fetchTodaysSales(), fetchTotalRevenue()]);
+  };
+
+  // Reset today's sales
+  const resetTodaysSales = async () => {
+    if (!confirm('Are you sure you want to reset today\'s sales? This action cannot be undone.')) return;
+    
+    setSalesLoading(true);
+    try {
+      const response = await fetch('/api/daily-sales/reset?resetToday=true', {
+        method: 'POST'
+      });
+
+      if (!response.ok) throw new Error('Failed to reset today\'s sales');
+
+      // Refresh the data after reset
+      await fetchTodaysSales();
+      
+    } catch (err) {
+      setError('Failed to reset today\'s sales');
+      console.error(err);
+    } finally {
+      setSalesLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchMenu();
+    fetchSalesData();
   }, []);
 
   // Drag and drop functions
@@ -238,6 +315,87 @@ const AdminControlPanel = () => {
             </button>
           </div>
         )}
+
+        {/* Sales Metrics Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* Today's Sales Card */}
+          <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Today's Sales</h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={fetchTodaysSales}
+                  disabled={salesLoading}
+                  className="p-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors disabled:opacity-50"
+                  title="Refresh Today's Sales"
+                >
+                  🔄
+                </button>
+                <button
+                  onClick={resetTodaysSales}
+                  disabled={salesLoading}
+                  className="p-2 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors disabled:opacity-50"
+                  title="Reset Today's Sales"
+                >
+                  🔄 Reset
+                </button>
+              </div>
+            </div>
+            {salesLoading ? (
+              <div className="text-center py-4">
+                <div className="animate-pulse">Loading...</div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Total Orders:</span>
+                  <span className="text-xl font-bold text-blue-600">{todaysSales.total_orders}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Revenue:</span>
+                  <span className="text-xl font-bold text-green-600">₹{Number(todaysSales.total_revenue).toFixed(2)}</span>
+                </div>
+                <div className="text-xs text-gray-500 mt-2">
+                  Updated: {new Date().toLocaleTimeString()}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Total Revenue Card */}
+          <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-green-500">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Total Revenue</h3>
+              <button
+                onClick={fetchTotalRevenue}
+                disabled={salesLoading}
+                className="p-2 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors disabled:opacity-50"
+                title="Refresh Total Revenue"
+              >
+                🔄
+              </button>
+            </div>
+            {salesLoading ? (
+              <div className="text-center py-4">
+                <div className="animate-pulse">Loading...</div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Total Orders:</span>
+                  <span className="text-xl font-bold text-blue-600">{totalRevenue.total_orders}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Revenue:</span>
+                  <span className="text-xl font-bold text-green-600">₹{Number(totalRevenue.total_revenue).toFixed(2)}</span>
+                </div>
+                <div className="text-xs text-gray-500 mt-2">
+                  Cumulative from all served orders
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Menu Management Tab */}
         {activeTab === 'menu' && (

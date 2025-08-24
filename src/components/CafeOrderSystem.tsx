@@ -57,23 +57,13 @@ const CafeOrderSystem = () => {
 
   const fetchDailySales = async () => {
     try {
-      const response = await fetch('/api/daily-sales');
+      const response = await fetch('/api/daily-sales/today');
       if (!response.ok) throw new Error('Failed to fetch daily sales');
       const data = await response.json();
-      
-      // Get today's sales data (most recent entry)
-      if (data.length > 0) {
-        const todaySales = data[0]; // Assuming the API returns sorted by date DESC
-        setDailySales(todaySales.total_revenue || 0);
-      } else {
-        setDailySales(0);
-      }
+      setDailySales(data.total_revenue);
     } catch (err) {
       console.error('Failed to fetch daily sales:', err);
-      // Fallback to local calculation if API fails
-      const served = orders.filter((order: Order) => order.status === 'served');
-      const sales = served.reduce((sum: number, order: Order) => sum + order.total, 0);
-      setDailySales(sales);
+      setDailySales(0); // Reset to 0 on error
     }
   };
 
@@ -82,7 +72,7 @@ const CafeOrderSystem = () => {
   const fetchOrders = async () => {
     const scrollPosition = ordersContainerRef.current?.scrollTop || 0; // Store current scroll position
     try {
-    const response = await fetch('/api/orders');
+    const response = await fetch('/api/orders'); // Remove ?includeServed=true to only get non-served orders
     if (!response.ok) throw new Error('Failed to fetch orders');
     const data = await response.json();
     setOrders(data);
@@ -157,7 +147,20 @@ const CafeOrderSystem = () => {
 
       if (!response.ok) throw new Error('Failed to update order');
 
-      await fetchOrders(); // Refresh orders
+      // For served orders, immediately update local state for instant UI feedback
+      // and also force a refresh to ensure consistency with the backend
+      if (status === 'served') {
+        setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
+        setPendingOrdersCount(prev => prev - 1);
+        await fetchDailySales();
+        
+        // Force an immediate refresh to ensure UI is in sync with backend
+        setTimeout(() => {
+          fetchOrders();
+        }, 100);
+      } else {
+        await fetchOrders(); // Refresh orders for other status changes
+      }
       
     } catch (err) {
       setError('Failed to update order');
@@ -441,84 +444,122 @@ const CafeOrderSystem = () => {
 
       {/* Edit Order Modal */}
       {editingOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto shadow-xl">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Edit Order #{editingOrder.order_number}</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full max-h-[85vh] overflow-y-auto shadow-2xl border border-gray-200 transform transition-all duration-300 scale-100">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Edit Order #{editingOrder.order_number}
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">Modify items and quantities</p>
+              </div>
               <button
                 onClick={cancelEdit}
-                className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors duration-200"
                 title="Cancel"
               >
-                <X className="w-5 h-5" />
+                <X className="w-6 h-6" />
               </button>
             </div>
             
-            <div className="mb-4">
-              <h3 className="font-semibold text-gray-900 mb-3">Current Items:</h3>
-              {editingOrder.items.map(item => (
-                <div key={item.id} className="flex justify-between items-center py-2 border-b border-gray-200">
-                  <span className="text-gray-900 font-medium">{item.name}</span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => updateEditingOrderItem(item.id, item.quantity - 1)}
-                      className="w-6 h-6 bg-blue-600 text-white rounded flex items-center justify-center hover:bg-blue-700 transition-colors text-sm"
-                    >
-                      -
-                    </button>
-                    <span className="w-6 text-center font-semibold text-gray-900 text-sm">{item.quantity}</span>
-                    <button
-                      onClick={() => updateEditingOrderItem(item.id, item.quantity + 1)}
-                      className="w-6 h-6 bg-blue-600 text-white rounded flex items-center justify-center hover:bg-blue-700 transition-colors text-sm"
-                    >
-                      +
-                    </button>
-                    <button
-                      onClick={() => updateEditingOrderItem(item.id, 0)}
-                      className="p-2 text-red-600 hover:text-red-800 hover:bg-red-100 rounded transition-colors"
-                      title="Remove"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+            {/* Current Items Section */}
+            <div className="mb-6">
+              <h3 className="font-semibold text-gray-900 mb-4 text-lg flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                Current Items
+              </h3>
+              <div className="space-y-3">
+                {editingOrder.items.map(item => (
+                  <div key={item.id} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors duration-200">
+                    <div className="flex-1 min-w-0">
+                      <span className="text-gray-900 font-medium text-sm block truncate">{item.name}</span>
+                      <span className="text-gray-600 text-xs">₹{item.price} each</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 bg-white rounded-full p-1 shadow-sm">
+                        <button
+                          onClick={() => updateEditingOrderItem(item.id, item.quantity - 1)}
+                          className="w-8 h-8 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors duration-200 font-semibold text-lg"
+                          title="Decrease quantity"
+                        >
+                          -
+                        </button>
+                        <span className="w-8 text-center font-bold text-gray-900 text-sm">{item.quantity}</span>
+                        <button
+                          onClick={() => updateEditingOrderItem(item.id, item.quantity + 1)}
+                          className="w-8 h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center hover:bg-blue-200 transition-colors duration-200 font-semibold text-lg"
+                          title="Increase quantity"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <button
+                        onClick={() => updateEditingOrderItem(item.id, 0)}
+                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors duration-200"
+                        title="Remove item"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
-            <div className="mb-4">
-              <h3 className="font-semibold text-gray-900 mb-3">Add Items:</h3>
-              <div className="grid grid-cols-2 gap-2">
+            {/* Add Items Section */}
+            <div className="mb-6">
+              <h3 className="font-semibold text-gray-900 mb-4 text-lg flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                Add Items
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
                 {menuItems.map(item => (
                   <button
                     key={item.id}
                     onClick={() => addItemToEditingOrder(item)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded font-medium text-sm transition-colors"
+                    className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white p-3 rounded-lg font-medium text-sm transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                   >
-                    {item.name}
+                    <div className="font-semibold text-xs leading-tight">{item.name}</div>
+                    <div className="text-xs opacity-90 mt-1">₹{item.price}</div>
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="border-t border-gray-200 pt-4 flex justify-between items-center">
-              <span className="font-bold text-xl text-gray-900">
-                Total: ₹{editingOrder.total}
-              </span>
-              <div className="flex gap-3">
-                <button
-                  onClick={cancelEdit}
-                  className="px-6 py-3 bg-gray-300 text-gray-800 rounded-lg font-medium hover:bg-gray-400 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={saveEditedOrder}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
-                >
-                  <Save className="w-5 h-5" />
-                  Save
-                </button>
+            {/* Total and Action Buttons */}
+            <div className="border-t border-gray-200 pt-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <div className="text-sm text-gray-600">Order Total</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    ₹{editingOrder.total}
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={cancelEdit}
+                    className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-all duration-200 transform hover:scale-105 border border-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={saveEditedOrder}
+                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center gap-2"
+                  >
+                    <Save className="w-5 h-5" />
+                    Save Changes
+                  </button>
+                </div>
               </div>
+              
+              {editingOrder.items.length === 0 && (
+                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+                  <p className="text-sm text-yellow-800">
+                    ⚠️ This order will be deleted if you save without any items.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

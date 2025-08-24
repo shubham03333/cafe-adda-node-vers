@@ -7,24 +7,15 @@
 // Load environment variables first
 require('dotenv').config({ path: '.env.local' });
 
-// Import the database connection with proper handling
-async function getDbConnection() {
-  // Use dynamic import for ES modules
-  const { db } = await import('../src/lib/db.ts');
-  return db;
-}
-
 // Import timezone utilities
-async function getTimezoneUtils() {
-  const { getYesterdayISTDateString, formatISTDateTime } = await import('../src/lib/timezone.ts');
-  return { getYesterdayISTDateString, formatISTDateTime };
-}
+const { getYesterdayISTDateString, formatISTDateTime } = require('./timezone-utils.js');
+
+// Import the database connection
+const { db } = require('./db-utils.js');
 
 async function resetDailySales() {
   console.log('🔄 Starting daily sales reset process...');
   
-  const db = await getDbConnection();
-  const { getYesterdayISTDateString, formatISTDateTime } = await getTimezoneUtils();
   
   console.log(`⏰ Current IST time: ${formatISTDateTime(new Date())}`);
 
