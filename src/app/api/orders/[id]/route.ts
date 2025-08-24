@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery } from '@/lib/db';
 import { UpdateOrderRequest } from '@/types';
+import { getTodayISTDateString } from '@/lib/timezone'; // Import timezone utility
 // PUT update order
 export async function PUT(
   request: NextRequest,
@@ -42,8 +43,8 @@ export async function PUT(
       values
     );
 
-    // If status is being updated to "served", update daily sales
     if (body.status === 'served') {
+      console.log(`Updating order status for order ID: ${id} to served`);
       // Get the order total first
       const orderRows = await executeQuery(
         'SELECT total FROM orders WHERE id = ?',
@@ -52,7 +53,8 @@ export async function PUT(
       
       if (orderRows && orderRows.length > 0) {
         const orderTotal = orderRows[0].total;
-        const today = new Date().toISOString().split('T')[0];
+        console.log(`Order total for order ID ${id}: ₹${orderTotal}`);
+        const today = getTodayISTDateString(); // Use IST date
         
         await executeQuery(`
           INSERT INTO daily_sales (sale_date, total_orders, total_revenue) 
@@ -61,6 +63,7 @@ export async function PUT(
             total_orders = total_orders + 1,
             total_revenue = total_revenue + ?
         `, [today, orderTotal, orderTotal]);
+        console.log(`Updated daily sales for ${today}: +1 order, +₹${orderTotal}`);
       }
     }
 

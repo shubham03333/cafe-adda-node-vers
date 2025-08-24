@@ -366,7 +366,7 @@ const CafeOrderSystem = () => {
       <div className="bg-gradient-to-r from-red-600 to-red-800 rounded-lg shadow-lg p-4 mb-4">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="Logo" className="w-17 h-17 mb-4" />
+            <img src="/logo.png" alt="Logo" className="w-22 h-22 mb-4" />
           </div>
           <div className="flex items-center gap-3">
             <a 

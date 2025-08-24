@@ -176,7 +176,7 @@ const CustomerOrderSystem = () => {
       <div className="bg-gradient-to-r from-red-600 to-red-800 rounded-lg shadow-lg p-4 mb-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="Logo" className="w-20 h-20" />
+            <img src="/logo.png" alt="Logo" className="w-24 h-24" />
             <h1 className="text-xl font-bold text-white">Place Your Order</h1>
           </div>
           {(buildingOrder.length > 0 || isOrderActive) && !orderNumber && (
