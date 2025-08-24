@@ -351,7 +351,7 @@ const CafeOrderSystem = () => {
           <div>{error}</div>
           <button 
             onClick={() => window.location.reload()} 
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded w-full sm:w-auto"
           >
             Retry
           </button>
@@ -363,15 +363,15 @@ const CafeOrderSystem = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-4 max-w-md mx-auto">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg p-4 mb-4">
+      <div className="bg-gradient-to-r from-red-600 to-red-800 rounded-lg shadow-lg p-4 mb-4">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-white">Adda®️ Dash.</h1>
+            <img src="/logo.png" alt="Logo" className="w-17 h-17 mb-4" />
           </div>
           <div className="flex items-center gap-3">
             <a 
               href="/chef" 
-              className="p-2 bg-white text-blue-600 rounded-lg text-sm hover:bg-gray-100 transition-colors shadow-md flex items-center gap-1"
+              className="p-2 bg-white text-red-600 rounded-lg text-sm hover:bg-gray-100 transition-colors shadow-md flex items-center gap-1"
               title="Chef Dashboard"
             >
               <span className="hidden sm:inline"></span>
@@ -387,7 +387,7 @@ const CafeOrderSystem = () => {
             </div>
             <button
               onClick={openReportModal}
-              className="p-2 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-colors shadow-md"
+              className="p-2 bg-white text-red-600 rounded-lg hover:bg-gray-100 transition-colors shadow-md"
               title="Sales Report"
             >
               <BarChart3 className="w-5 h-5" />
@@ -398,26 +398,26 @@ const CafeOrderSystem = () => {
 
       {/* Building Order Section */}
       {buildingOrder.length > 0 && (
-        <div className="bg-blue-100 rounded-lg p-4 mb-4 border-2 border-blue-300">
-          <h3 className="font-semibold text-blue-900 mb-2">Building Order:</h3>
+        <div className="bg-red-100 rounded-lg p-4 mb-4 border-2 border-red-300">
+          <h3 className="font-semibold text-red-900 mb-2">Building Order:</h3>
           {buildingOrder.map(item => (
-            <div key={item.id} className="flex justify-between items-center py-2 border-b border-blue-300">
-              <span className="text-blue-900 font-medium">{item.name}</span>
+            <div key={item.id} className="flex justify-between items-center py-2 border-b border-red-300">
+              <span className="text-red-900 font-medium">{item.name}</span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => updateBuildingOrderItemQuantity(item.id, item.quantity - 1)}
-                  className="w-6 h-6 bg-blue-600 text-white rounded flex items-center justify-center hover:bg-blue-700 transition-colors text-sm"
+                  className="w-6 h-6 bg-red-600 text-white rounded flex items-center justify-center hover:bg-red-700 transition-colors text-sm"
                 >
                   -
                 </button>
-                <span className="w-6 text-center font-semibold text-blue-900 text-sm">{item.quantity}</span>
+                <span className="w-6 text-center font-semibold text-red-900 text-sm">{item.quantity}</span>
                 <button
                   onClick={() => updateBuildingOrderItemQuantity(item.id, item.quantity + 1)}
-                  className="w-6 h-6 bg-blue-600 text-white rounded flex items-center justify-center hover:bg-blue-700 transition-colors text-sm"
+                  className="w-6 h-6 bg-red-600 text-white rounded flex items-center justify-center hover:bg-red-700 transition-colors text-sm"
                 >
                   +
                 </button>
-                <span className="font-medium text-blue-900 w-16 text-right">₹{item.price * item.quantity}</span>
+                <span className="font-medium text-red-900 w-16 text-right">₹{item.price * item.quantity}</span>
                 <button
                   onClick={() => removeItemFromBuildingOrder(item.id)}
                   className="p-2 text-red-600 hover:text-red-800 hover:bg-red-100 rounded transition-colors"
@@ -428,13 +428,13 @@ const CafeOrderSystem = () => {
               </div>
             </div>
           ))}
-          <div className="border-t border-blue-300 pt-2 mt-2 flex justify-between items-center">
-            <span className="font-bold text-blue-900">
+          <div className="border-t border-red-300 pt-2 mt-2 flex justify-between items-center">
+            <span className="font-bold text-red-900">
               Total: ₹{buildingOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0)}
             </span>
             <button 
               onClick={placeOrder}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700"
+              className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700"
             >
               Place Order
             </button>
@@ -449,7 +449,7 @@ const CafeOrderSystem = () => {
             {/* Header */}
             <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h2 className="text-2xl font-bold text-gray-900 bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
                   Edit Order #{editingOrder.order_number}
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">Modify items and quantities</p>
@@ -466,7 +466,7 @@ const CafeOrderSystem = () => {
             {/* Current Items Section */}
             <div className="mb-6">
               <h3 className="font-semibold text-gray-900 mb-4 text-lg flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                 Current Items
               </h3>
               <div className="space-y-3">
@@ -488,7 +488,7 @@ const CafeOrderSystem = () => {
                         <span className="w-8 text-center font-bold text-gray-900 text-sm">{item.quantity}</span>
                         <button
                           onClick={() => updateEditingOrderItem(item.id, item.quantity + 1)}
-                          className="w-8 h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center hover:bg-blue-200 transition-colors duration-200 font-semibold text-lg"
+                          className="w-8 h-8 bg-red-100 text-red-700 rounded-full flex items-center justify-center hover:bg-red-200 transition-colors duration-200 font-semibold text-lg"
                           title="Increase quantity"
                         >
                           +
@@ -518,7 +518,7 @@ const CafeOrderSystem = () => {
                   <button
                     key={item.id}
                     onClick={() => addItemToEditingOrder(item)}
-                    className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white p-3 rounded-lg font-medium text-sm transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                    className="bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white p-3 rounded-lg font-medium text-sm transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                   >
                     <div className="font-semibold text-xs leading-tight">{item.name}</div>
                     <div className="text-xs opacity-90 mt-1">₹{item.price}</div>
@@ -545,7 +545,7 @@ const CafeOrderSystem = () => {
                   </button>
                   <button
                     onClick={saveEditedOrder}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center gap-2"
+                    className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-800 text-white rounded-lg font-medium hover:from-red-700 hover:to-red-900 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center gap-2"
                   >
                     <Save className="w-5 h-5" />
                     Save Changes
@@ -574,7 +574,7 @@ const CafeOrderSystem = () => {
             <button
               key={item.id}
               onClick={() => addToOrder(item, 1)}
-              className="w-full p-4 rounded-lg text-center font-medium min-h-[90px] flex flex-col justify-center transition-all duration-300 shadow-md hover:shadow-lg bg-gradient-to-br from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 cursor-pointer hover:scale-105"
+              className="w-full p-4 rounded-lg text-center font-medium min-h-[90px] flex flex-col justify-center transition-all duration-300 shadow-md hover:shadow-lg bg-gradient-to-br from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 cursor-pointer hover:scale-105"
             >
               <div className="font-semibold text-sm leading-tight px-1 overflow-hidden" style={{ 
                 display: '-webkit-box',
@@ -590,7 +590,7 @@ const CafeOrderSystem = () => {
       {/* Order Queue */}
       <div className="bg-white rounded-lg shadow-lg p-4">
         <h2 className="font-semibold text-gray-800 mb-4 text-lg flex items-center gap-2">
-          <Clock className="w-6 h-6 text-blue-600" />
+          <Clock className="w-6 h-6 text-red-600" />
           Order Queue ({orders.length})
         </h2>
         
@@ -606,33 +606,33 @@ const CafeOrderSystem = () => {
               {orders.map(order => (
                 <div 
                   key={order.id} 
-                  className="p-5 rounded-lg border-l-4 border-blue-500 bg-gradient-to-r from-blue-50 to-white shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer"
+                  className="p-5 rounded-lg border-l-4 border-red-500 bg-gradient-to-r from-red-50 to-white shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer"
                   onClick={() => handleOrderClick(order)}
                 >
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center gap-3">
-                      <Clock className="w-6 h-6 text-blue-700" />
-                      <span className="font-bold text-xl text-blue-900">#{order.order_number}</span>
+                      <Clock className="w-6 h-6 text-red-700" />
+                      <span className="font-bold text-xl text-red-900">#{order.order_number}</span>
                       <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
                         order.status === 'preparing' 
                           ? 'bg-yellow-200 text-yellow-900' 
                           : order.status === 'ready' 
                           ? 'bg-green-200 text-green-900'
                           : order.status === 'served'
-                          ? 'bg-blue-200 text-blue-900'
+                          ? 'bg-red-200 text-red-900'
                           : 'bg-orange-200 text-orange-900'
                       }`}>
                         {order.status}
                       </span>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-xl text-blue-900">₹{order.total}</div>
+                      <div className="font-bold text-xl text-red-900">₹{order.total}</div>
                     </div>
                   </div>
                   
                   <div className="mb-4">
                     {order.items.map(item => (
-                      <div key={item.id} className="flex justify-between items-center text-sm text-blue-800 py-2 border-b border-blue-100 last:border-b-0">
+                      <div key={item.id} className="flex justify-between items-center text-sm text-red-800 py-2 border-b border-red-100 last:border-b-0">
                         <span className="font-medium">{item.quantity}x {item.name}</span>
                         <button
                           onClick={(e) => {
@@ -654,7 +654,7 @@ const CafeOrderSystem = () => {
                         e.stopPropagation();
                         editOrder(order);
                       }}
-                      className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-1 text-sm"
+                      className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center gap-1 text-sm"
                       title="Edit order"
                     >
                       <Edit2 className="w-3 h-3" />
@@ -727,7 +727,7 @@ const CafeOrderSystem = () => {
               
               <button
                 onClick={generateSalesReport}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded font-medium transition-colors"
+                className="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded font-medium transition-colors"
               >
                 Generate Report
               </button>
@@ -743,9 +743,9 @@ const CafeOrderSystem = () => {
                     <div className="text-lg font-bold text-green-900">₹{salesReport.total_revenue || 0}</div>
                   </div>
                   
-                  <div className="bg-blue-50 p-3 rounded">
-                    <div className="text-sm text-blue-800">Total Orders</div>
-                    <div className="text-lg font-bold text-blue-900">{salesReport.total_orders || 0}</div>
+                  <div className="bg-red-50 p-3 rounded">
+                    <div className="text-sm text-red-800">Total Orders</div>
+                    <div className="text-lg font-bold text-red-900">{salesReport.total_orders || 0}</div>
                   </div>
                   
                   {salesReport.daily_sales && salesReport.daily_sales.length > 0 && (
@@ -808,7 +808,7 @@ const CafeOrderSystem = () => {
                     : viewingOrder.status === 'ready' 
                     ? 'bg-green-200 text-green-900'
                     : viewingOrder.status === 'served'
-                    ? 'bg-blue-200 text-blue-900'
+                    ? 'bg-red-200 text-red-900'
                     : 'bg-orange-200 text-orange-900'
                 }`}>
                   {viewingOrder.status}
@@ -817,7 +817,7 @@ const CafeOrderSystem = () => {
               
               <div className="flex justify-between items-center mb-3">
                 <span className="font-semibold text-gray-900">Total:</span>
-                <span className="font-bold text-xl text-blue-900">₹{viewingOrder.total}</span>
+                <span className="font-bold text-xl text-red-900">₹{viewingOrder.total}</span>
               </div>
             </div>
 
@@ -834,7 +834,7 @@ const CafeOrderSystem = () => {
             <div className="border-t border-gray-200 pt-4">
               <button
                 onClick={closeOrderPopup}
-                className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                className="w-full px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
               >
                 Close
               </button>

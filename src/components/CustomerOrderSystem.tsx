@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -146,7 +147,7 @@ const CustomerOrderSystem = () => {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 mx-auto mb-4 animate-pulse bg-blue-600 rounded-full"></div>
+          <div className="w-12 h-12 mx-auto mb-4 animate-pulse bg-red-600 rounded-full"></div>
           <div className="text-gray-700">Loading menu...</div>
         </div>
       </div>
@@ -159,12 +160,12 @@ const CustomerOrderSystem = () => {
         <div className="text-center text-red-600">
           <div className="text-xl font-bold mb-2">Error</div>
           <div>{error}</div>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
-          >
-            Retry
-          </button>
+                <button 
+                  onClick={() => window.location.reload()} 
+                  className="mt-4 px-4 py-2 bg-red-600 text-white rounded w-full sm:w-auto"
+                >
+                  Retry
+                </button>
         </div>
       </div>
     );
@@ -172,9 +173,12 @@ const CustomerOrderSystem = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 max-w-md mx-auto">
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg p-4 mb-4">
+      <div className="bg-gradient-to-r from-red-600 to-red-800 rounded-lg shadow-lg p-4 mb-4">
         <div className="flex justify-between items-center">
-          <h1 className="text-xl font-bold text-white">Place Your Order</h1>
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="Logo" className="w-20 h-20" />
+            <h1 className="text-xl font-bold text-white">Place Your Order</h1>
+          </div>
           {(buildingOrder.length > 0 || isOrderActive) && !orderNumber && (
             <button
               onClick={clearOrder}
@@ -187,12 +191,12 @@ const CustomerOrderSystem = () => {
       </div>
 
       {orderNumber && (
-        <div className="bg-blue-100 rounded-lg p-4 mb-4 border-2 border-blue-300">
-          <h3 className="font-semibold text-blue-900 mb-2">Your Order Status:</h3>
+        <div className="bg-red-100 rounded-lg p-4 mb-4 border-2 border-red-300">
+          <h3 className="font-semibold text-red-900 mb-2">Your Order Status:</h3>
           <div className="flex justify-between items-center">
             <div>
-              <div className="text-blue-900 font-medium">Order #{orderNumber}</div>
-              <div className="text-sm text-blue-700">
+              <div className="text-red-900 font-medium">Order #{orderNumber}</div>
+              <div className="text-sm text-red-700">
                 Status: {orderStatus || 'processing'}
               </div>
             </div>
@@ -209,32 +213,32 @@ const CustomerOrderSystem = () => {
       )}
 
       {(buildingOrder.length > 0 || isOrderActive) && (
-        <div className="bg-blue-100 rounded-lg p-4 mb-4 border-2 border-blue-300">
-          <h3 className="font-semibold text-blue-900 mb-2">Your Order:</h3>
+        <div className="bg-red-100 rounded-lg p-4 mb-4 border-2 border-red-300">
+          <h3 className="font-semibold text-red-900 mb-2">Your Order:</h3>
           {buildingOrder.map(item => (
-            <div key={item.id} className="flex justify-between items-center py-2 border-b border-blue-300">
-              <span className="text-blue-900 font-medium">{item.name}</span>
+            <div key={item.id} className="flex justify-between items-center py-2 border-b border-red-300">
+              <span className="text-red-900 font-medium">{item.name}</span>
               <div className="flex items-center gap-2">
                 {!orderNumber ? (
                   <>
                     <button
                       onClick={() => updateBuildingOrderItemQuantity(item.id, item.quantity - 1)}
-                      className="w-6 h-6 bg-blue-600 text-white rounded flex items-center justify-center hover:bg-blue-700 transition-colors text-sm"
+                      className="w-6 h-6 bg-red-600 text-white rounded flex items-center justify-center hover:bg-red-700 transition-colors text-sm"
                     >
                       -
                     </button>
-                    <span className="w-6 text-center font-semibold text-blue-900 text-sm">{item.quantity}</span>
+                    <span className="w-6 text-center font-semibold text-red-900 text-sm">{item.quantity}</span>
                     <button
                       onClick={() => updateBuildingOrderItemQuantity(item.id, item.quantity + 1)}
-                      className="w-6 h-6 bg-blue-600 text-white rounded flex items-center justify-center hover:bg-blue-700 transition-colors text-sm"
+                      className="w-6 h-6 bg-red-600 text-white rounded flex items-center justify-center hover:bg-red-700 transition-colors text-sm"
                     >
                       +
                     </button>
                   </>
                 ) : (
-                  <span className="w-6 text-center font-semibold text-blue-900 text-sm">×{item.quantity}</span>
+                  <span className="w-6 text-center font-semibold text-red-900 text-sm">×{item.quantity}</span>
                 )}
-                <span className="font-medium text-blue-900 w-16 text-right">₹{item.price * item.quantity}</span>
+                <span className="font-medium text-red-900 w-16 text-right">₹{item.price * item.quantity}</span>
                 {!orderNumber && (
                   <button
                     onClick={() => removeItemFromBuildingOrder(item.id)}
@@ -247,18 +251,18 @@ const CustomerOrderSystem = () => {
               </div>
             </div>
           ))}
-          <div className="border-t border-blue-300 pt-2 mt-2 flex justify-between items-center">
-            <span className="font-bold text-blue-900">
+          <div className="border-t border-red-300 pt-2 mt-2 flex justify-between items-center">
+            <span className="font-bold text-red-900">
               Total: ₹{buildingOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0)}
             </span>
             <div className="flex gap-2 items-center">
               {orderNumber ? (
-                <span className="text-blue-900 font-medium">Order #{orderNumber}</span>
+                <span className="text-red-900 font-medium">Order #{orderNumber}</span>
               ) : (
                 <button 
                   onClick={placeOrder}
                   disabled={isPlacingOrder}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isPlacingOrder ? 'Order Placed' : 'Place Order'}
                 </button>
@@ -287,7 +291,7 @@ const CustomerOrderSystem = () => {
               className={`w-full p-4 rounded-lg text-center font-medium min-h-[90px] flex flex-col justify-center transition-all duration-300 shadow-md hover:shadow-lg cursor-pointer hover:scale-105 ${
                 orderNumber 
                   ? 'bg-gray-400 cursor-not-allowed opacity-70' 
-                  : 'bg-gradient-to-br from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'
+                  : 'bg-gradient-to-br from-red-600 to-red-800 hover:from-red-700 hover:to-red-900'
               }`}
             >
               <div className="font-semibold text-sm leading-tight px-1 overflow-hidden" style={{ 

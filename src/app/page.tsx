@@ -1,9 +1,5 @@
-import CafeOrderSystem from '@/components/CafeOrderSystem';
+import CustomerOrderSystem from '@/components/CustomerOrderSystem';
 
 export default function Home() {
-  return <CafeOrderSystem />;
+  return <CustomerOrderSystem />;
 }
-
-
-
-

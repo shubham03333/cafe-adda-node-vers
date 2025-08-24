@@ -49,7 +49,7 @@ const SalesReport = () => {
       </div>
       <button
         onClick={generateSalesReport}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+        className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
       >
         Generate Report
       </button>
@@ -65,9 +65,9 @@ const SalesReport = () => {
               <div className="text-lg font-bold text-green-900">₹{salesReport.total_revenue || 0}</div>
             </div>
             
-            <div className="bg-blue-50 p-3 rounded">
-              <div className="text-sm text-blue-800">Total Orders</div>
-              <div className="text-lg font-bold text-blue-900">{salesReport.total_orders || 0}</div>
+            <div className="bg-red-50 p-3 rounded">
+              <div className="text-sm text-red-800">Total Orders</div>
+              <div className="text-lg font-bold text-red-900">{salesReport.total_orders || 0}</div>
             </div>
             
             {salesReport.daily_sales && salesReport.daily_sales.length > 0 && (

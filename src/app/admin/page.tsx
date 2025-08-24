@@ -1,20 +1,8 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Save, X, Edit2, Trash2, Plus, BarChart3, Settings, Menu, Users, Package } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Save, X, Edit2, Trash2, Plus, BarChart3, Settings, Menu, Users, Package, LogOut } from 'lucide-react';
 import { MenuItem } from '@/types';
 import SalesReport from '@/components/SalesReport';
 
@@ -35,11 +23,37 @@ const AdminControlPanel = () => {
   const [todaysSales, setTodaysSales] = useState({ total_orders: 0, total_revenue: 0 });
   const [totalRevenue, setTotalRevenue] = useState({ total_orders: 0, total_revenue: 0 });
   const [salesLoading, setSalesLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const router = useRouter();
+
+  // Check authentication on component mount
+  useEffect(() => {
+    const checkAuth = () => {
+      const isLoggedIn = localStorage.getItem('isLoggedIn');
+      const userRole = localStorage.getItem('userRole');
+      
+      if (isLoggedIn === 'true' && userRole === 'admin') {
+        setIsAuthenticated(true);
+        fetchMenu();
+        fetchSalesData();
+      } else {
+        router.push('/admin/login');
+      }
+    };
+
+    checkAuth();
+  }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userRole');
+    router.push('/login');
+  };
 
   // Fetch menu items
   const fetchMenu = async () => {
     try {
-      const response = await fetch('/api/menu/admin'); // Updated to use admin endpoint
+      const response = await fetch('/api/menu/admin');
       if (!response.ok) throw new Error('Failed to fetch menu');
       const data = await response.json();
       setMenuItems(data);
@@ -100,7 +114,6 @@ const AdminControlPanel = () => {
 
       if (!response.ok) throw new Error('Failed to reset today\'s sales');
 
-      // Refresh the data after reset
       await fetchTodaysSales();
       
     } catch (err) {
@@ -110,11 +123,6 @@ const AdminControlPanel = () => {
       setSalesLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchMenu();
-    fetchSalesData();
-  }, []);
 
   // Drag and drop functions
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, item: MenuItem) => {
@@ -174,7 +182,7 @@ const AdminControlPanel = () => {
 
       if (!response.ok) throw new Error('Failed to save menu positions');
 
-      await fetchMenu(); // Refresh menu to get updated positions
+      await fetchMenu();
       
     } catch (err) {
       setError('Failed to save menu positions');
@@ -194,7 +202,7 @@ const AdminControlPanel = () => {
 
       if (!response.ok) throw new Error('Failed to update item availability');
 
-      await fetchMenu(); // Refresh menu
+      await fetchMenu();
       
     } catch (err) {
       setError('Failed to update item availability');
@@ -212,7 +220,7 @@ const AdminControlPanel = () => {
 
       if (!response.ok) throw new Error('Failed to delete menu item');
 
-      await fetchMenu(); // Refresh menu
+      await fetchMenu();
       
     } catch (err) {
       setError('Failed to delete menu item');
@@ -235,13 +243,24 @@ const AdminControlPanel = () => {
 
       setEditingItem(null);
       setNewItem({ name: '', price: 0, category: '', is_available: true });
-      await fetchMenu(); // Refresh menu
+      await fetchMenu();
       
     } catch (err) {
       setError('Failed to save menu item');
       console.error(err);
     }
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -257,16 +276,25 @@ const AdminControlPanel = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg">
+      <div className="bg-gradient-to-r from-red-600 to-red-800 shadow-lg">
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-white">Admin Control Panel</h1>
-            <a 
-              href="/" 
-              className="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              Back to Orders
-            </a>
+            <div className="flex items-center gap-4">
+              <a 
+                href="/" 
+                className="bg-white text-red-600 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                Back to Orders
+              </a>
+              <button
+                onClick={handleLogout}
+                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -288,9 +316,9 @@ const AdminControlPanel = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-4 py-3 flex items-center gap-2 transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                      activeTab === tab.id
+                        ? 'bg-red-600 text-white'
+                        : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
                   }`}
                 >
                   <IconComponent className="w-4 h-4" />
@@ -319,14 +347,14 @@ const AdminControlPanel = () => {
         {/* Sales Metrics Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           {/* Today's Sales Card */}
-          <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500">
+          <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-red-500">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Today's Sales</h3>
               <div className="flex items-center gap-2">
                 <button
                   onClick={fetchTodaysSales}
                   disabled={salesLoading}
-                  className="p-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors disabled:opacity-50"
+                  className="p-2 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors disabled:opacity-50"
                   title="Refresh Today's Sales"
                 >
                   🔄
@@ -349,7 +377,7 @@ const AdminControlPanel = () => {
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Total Orders:</span>
-                  <span className="text-xl font-bold text-blue-600">{todaysSales.total_orders}</span>
+                  <span className="text-xl font-bold text-red-600">{todaysSales.total_orders}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Revenue:</span>
@@ -469,7 +497,7 @@ const AdminControlPanel = () => {
               <div className="flex gap-3">
                 <button
                   onClick={saveMenuItem}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center gap-2"
                 >
                   <Save className="w-4 h-4" />
                   {editingItem ? 'Update Item' : 'Add Item'}
@@ -522,16 +550,16 @@ const AdminControlPanel = () => {
                     className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-move hover:bg-gray-100 transition-colors"
                   >
                     <div className="flex items-center gap-4 flex-1">
-                      <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center text-blue-600 font-semibold">
+                    <div className="w-8 h-8 bg-red-100 rounded flex items-center justify-center text-red-600 font-semibold">
                         {item.position || '?'}
                       </div>
                       
-                  <div className="flex-1">
-                    <div className="font-semibold text-gray-900">{item.name}</div>
-                    <div className="text-sm text-gray-700">
-                      ₹{item.price} • {item.category}
-                    </div>
-                  </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-900">{item.name}</div>
+                        <div className="text-sm text-gray-700">
+                          ₹{item.price} • {item.category}
+                        </div>
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -557,7 +585,7 @@ const AdminControlPanel = () => {
 
                       <button
                         onClick={() => setEditingItem(item)}
-                        className="p-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
+                        className="p-2 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors"
                         title="Edit"
                       >
                         <Edit2 className="w-4 h-4" />

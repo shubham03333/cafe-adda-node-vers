@@ -53,25 +53,46 @@ const ChefOrderSystem = () => {
   };
 
   if (loading) {
-    return <div className="text-center text-lg font-semibold">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="w-12 h-12 mx-auto mb-4 animate-pulse bg-red-600 rounded-full"></div>
+          <div className="text-gray-700">Loading orders...</div>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="text-red-600 text-lg font-semibold">{error}</div>;
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+        <div className="text-center text-red-600">
+          <div className="text-xl font-bold mb-2">Error</div>
+          <div>{error}</div>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded w-full sm:w-auto"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 max-w-md mx-auto">
       {/* Header */}
-      <div className="bg-blue-600 rounded-lg shadow-lg p-4 mb-4">
+      <div className="bg-red-600 rounded-lg shadow-lg p-4 mb-4">
         <div className="flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-800">👨‍🍳 Chef Dashboard</h1>
+          <h1 className="text-xl font-bold text-white">👨‍🍳 Chef Dashboard</h1>
             <a 
-              href="/" 
-              className="px-3 py-1 bg-blue-700 text-white rounded text-sm hover:bg-blue-800 transition-colors"
-          >
-            View Dashbord
-          </a>
+              href="/dashbord"
+              target="_blank" 
+              className="px-3 py-1 bg-red-700 text-white rounded text-sm hover:bg-red-800 transition-colors"
+            >
+              View Dashboard
+            </a>
         </div>
       </div>
 
