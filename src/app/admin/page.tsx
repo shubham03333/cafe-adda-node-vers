@@ -39,7 +39,7 @@ const AdminControlPanel = () => {
   // Fetch menu items
   const fetchMenu = async () => {
     try {
-      const response = await fetch('/api/menu');
+      const response = await fetch('/api/menu/admin'); // Updated to use admin endpoint
       if (!response.ok) throw new Error('Failed to fetch menu');
       const data = await response.json();
       setMenuItems(data);

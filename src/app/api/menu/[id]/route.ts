@@ -7,12 +7,35 @@ export async function PUT(
 ) {
   try {
     const updatedItem = await request.json();
-    const { name, price, category, is_available } = updatedItem;
     const { id } = await params;
 
     if (!db) {
       throw new Error('Database not configured');
     }
+
+    // First, get the current item to preserve existing values
+    const [currentItems] = await db.execute(
+      'SELECT * FROM menu_items WHERE id = ?',
+      [id]
+    );
+    
+    // Type assertion to handle the query result
+    const itemsArray = currentItems as any[];
+    
+    if (!itemsArray || itemsArray.length === 0) {
+      return NextResponse.json(
+        { error: 'Menu item not found' },
+        { status: 404 }
+      );
+    }
+
+    const currentItem = itemsArray[0];
+    
+    // Update only the fields that are provided in the request
+    const name = updatedItem.name !== undefined ? updatedItem.name : currentItem.name;
+    const price = updatedItem.price !== undefined ? updatedItem.price : currentItem.price;
+    const category = updatedItem.category !== undefined ? updatedItem.category : currentItem.category;
+    const is_available = updatedItem.is_available !== undefined ? updatedItem.is_available : currentItem.is_available;
 
     await db.execute(
       'UPDATE menu_items SET name = ?, price = ?, category = ?, is_available = ? WHERE id = ?',
