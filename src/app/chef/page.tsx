@@ -17,18 +17,13 @@ export default function ChefPage() {
       if (isLoggedIn === 'true' && userRole === 'chef') {
         setIsAuthenticated(true);
       } else {
-        router.push('/chef/login');
+        router.push('/login'); // Redirect to the main login page
       }
     };
 
     checkAuth();
   }, [router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('userRole');
-    router.push('/login');
-  };
 
   if (!isAuthenticated) {
     return (
@@ -45,15 +40,7 @@ export default function ChefPage() {
     <div>
       <div className="bg-gradient-to-r from-orange-600 to-red-600 shadow-lg">
         <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <h1 className="text-2xl font-bold text-white">Chef Dashboard</h1>
-            <button
-              onClick={handleLogout}
-              className="bg-white text-orange-600 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-2 w-full sm:w-auto"
-            >
-              Logout
-            </button>
-          </div>
+          <h1 className="text-2xl font-bold text-white text-center">Chef Dashboard</h1>
         </div>
       </div>
       <ChefOrderSystem />

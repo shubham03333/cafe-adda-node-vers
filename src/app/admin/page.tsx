@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Save, X, Edit2, Trash2, Plus, BarChart3, Settings, Menu, Users, Package, LogOut } from 'lucide-react';
 import { MenuItem } from '@/types';
 import SalesReport from '@/components/SalesReport';
+import InventoryDashboard from '@/components/InventoryDashboard'; // Import InventoryDashboard
 
 const AdminControlPanel = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -37,7 +38,7 @@ const AdminControlPanel = () => {
         fetchMenu();
         fetchSalesData();
       } else {
-        router.push('/admin/login');
+        router.push('/login'); // Redirect to the main login page
       }
     };
 
@@ -640,14 +641,7 @@ const AdminControlPanel = () => {
 
         {/* Inventory Tab */}
         {activeTab === 'inventory' && (
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Inventory Management</h2>
-            <div className="text-center py-12 text-gray-500">
-              <Package className="w-16 h-16 mx-auto mb-4 opacity-50" />
-              <div className="text-lg">Inventory Management Coming Soon</div>
-              <div className="text-sm mt-2">This feature will be implemented in the next update</div>
-            </div>
-          </div>
+          <InventoryDashboard />
         )}
       </div>
     </div>

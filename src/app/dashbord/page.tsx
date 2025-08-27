@@ -15,10 +15,9 @@ export default function DashboardPage() {
       const isLoggedIn = localStorage.getItem('isLoggedIn');
       const userRole = localStorage.getItem('userRole');
       
-      if (isLoggedIn === 'true' && userRole === 'user') {
+      if (isLoggedIn === 'true' && userRole === 'dashboard') {
         setIsAuthenticated(true);
       } else {
-        // Redirect to login if not authenticated
         router.push('/login');
       }
       setIsLoading(false);
@@ -39,25 +38,11 @@ export default function DashboardPage() {
   }
 
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="text-red-600 text-xl font-bold mb-4">Access Denied</div>
-          <p className="text-gray-600 mb-4">You need to log in to access this page</p>
-            <button
-              onClick={() => router.push('/login')}
-              className="w-full sm:w-auto px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-            >
-            Go to Login
-          </button>
-        </div>
-      </div>
-    );
+    return null; // Will redirect to login page
   }
 
   return (
-    <div className="text-center mb-8">
-      {/* <img src="/logo.png" alt="Logo" className="w-32 h-32 mb-4" /> */}
+    <div className="min-h-screen bg-gray-100">
       <CafeOrderSystem />
     </div>
   );

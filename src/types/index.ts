@@ -5,6 +5,54 @@ export interface MenuItem {
   is_available: boolean;
   category: string;
   position?: number; // Added position field
+  // Inventory fields
+  stock_quantity?: number;
+  low_stock_threshold?: number;
+  unit_type?: string;
+  ingredients?: Record<string, number>; // ingredient: quantity
+  supplier_info?: string;
+  last_restocked?: string;
+  // Raw materials
+  raw_materials?: DishRawMaterial[];
+}
+
+export interface RawMaterial {
+  id: number;
+  name: string;
+  description?: string;
+  unit_type: string;
+  current_stock: number;
+  min_stock_level: number;
+  supplier_info?: string;
+  last_restocked?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DishRawMaterial {
+  id: number;
+  dish_id: number;
+  raw_material_id: number;
+  quantity_required: number;
+  raw_material?: RawMaterial;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RawMaterialUpdate {
+  id: number;
+  name?: string;
+  description?: string;
+  unit_type?: string;
+  current_stock?: number;
+  min_stock_level?: number;
+  supplier_info?: string;
+}
+
+export interface DishRawMaterialUpdate {
+  dish_id: number;
+  raw_material_id: number;
+  quantity_required: number;
 }
 
 export interface OrderItem extends MenuItem {
