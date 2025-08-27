@@ -23,20 +23,34 @@ CREATE TABLE menu_items (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert sample menu data with positions
-INSERT INTO menu_items (id, name, price, category, position) VALUES
-(1, 'Special Veg Munch Roll ', 40.00, 'Main Course', 1),
-(2, 'Veg Manchurian Bhel', 35.00, 'Main Course', 2),
-(3, 'Veg Manchurian Paav ', 25.00, 'Main Course', 3),
-(4, 'Special Veg Munch CHEESE Roll ', 50.00, 'Main Course', 4),
-(5, 'Chilax Cold Coffee', 40.00, 'Beverages', 1),
-(6, 'Veg Peri Peri Manchurian', 25.00, 'Main Course', 5),
-(7, 'Veg Masala Manchurian', 35.00, 'Main Course', 6),
-(8, 'Chilax Cold COCOA', 40.00, 'Beverages', 2),
-(9, 'Special DahiVada', 40.00, 'Main Course', 7),
-(10, 'Adda Special Combo', 99.00, 'Main Course', 8),
-(11, 'Tea', 10.00, 'Beverages', 3);
+-- Create user roles table
+CREATE TABLE user_roles (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  role_name VARCHAR(50) NOT NULL,
+  permissions JSON NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 
+-- Create users table
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(50) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  role_id INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (role_id) REFERENCES user_roles(id) ON DELETE CASCADE
+);
+
+-- Create system settings table
+CREATE TABLE system_settings (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  setting_name VARCHAR(50) NOT NULL,
+  setting_value VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 
 -- Create daily sales table
 CREATE TABLE daily_sales (
@@ -46,7 +60,6 @@ CREATE TABLE daily_sales (
   total_revenue DECIMAL(12,2) DEFAULT 0,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
 
 -- Create indexes for better performance
 CREATE INDEX idx_orders_status ON orders(status);

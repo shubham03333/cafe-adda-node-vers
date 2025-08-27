@@ -16,42 +16,44 @@ export default function LoginPage() {
     setIsLoading(true);
     setError('');
 
-    // Unified authentication logic for all user types
-    const credentials = {
-      admin: { username: 'admin', password: 'admin123', redirect: '/admin' },
-      chef: { username: 'chef', password: 'chef456', redirect: '/chef' },
-      dashboard: { username: 'dashbord', password: 'shubh123', redirect: '/dashbord' }
-    };
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
 
-    let authenticated = false;
-    
-    // Check admin credentials
-    if (username === credentials.admin.username && password === credentials.admin.password) {
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('userRole', 'admin');
-      router.push(credentials.admin.redirect);
-      authenticated = true;
+      if (response.ok) {
+        const userData = await response.json();
+        
+        // Store authentication data
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userRole', userData.role_name);
+        localStorage.setItem('userId', userData.id.toString());
+        localStorage.setItem('username', userData.username);
+        
+        // Redirect based on role
+        const redirectPaths: Record<string, string> = {
+          'admin': '/admin',
+          'chef': '/chef',
+          'dashboard': '/dashbord'
+        };
+        
+        const roleKey = userData.role_name.toLowerCase();
+        const redirectPath = redirectPaths[roleKey] || '/';
+        router.push(redirectPath);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Invalid credentials');
+      }
+    } catch (err) {
+      setError('Login failed. Please try again.');
+      console.error('Login error:', err);
+    } finally {
+      setIsLoading(false);
     }
-    // Check chef credentials
-    else if (username === credentials.chef.username && password === credentials.chef.password) {
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('userRole', 'chef');
-      router.push(credentials.chef.redirect);
-      authenticated = true;
-    }
-    // Check dashboard credentials
-    else if (username === credentials.dashboard.username && password === credentials.dashboard.password) {
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('userRole', 'dashboard');
-      router.push(credentials.dashboard.redirect);
-      authenticated = true;
-    }
-
-    if (!authenticated) {
-      setError('Invalid credentials');
-    }
-    
-    setIsLoading(false);
   };
 
   return (
@@ -132,7 +134,7 @@ export default function LoginPage() {
 
         {/* Role Information */}
         <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Demo Credentials:</h3>
+          {/* <h3 className="text-sm font-medium text-gray-700 mb-2">Demo Credentials:</h3> */}
           <div className="text-xs text-gray-600 space-y-1">
             {/* <div>Admin: admin / admin123</div>
             <div>Chef: chef / chef456</div>

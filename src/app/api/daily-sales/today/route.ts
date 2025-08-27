@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { executeQuery } from '@/lib/db';
-import { getTodayISTDateString } from '@/lib/timezone';
+import { getTodayDateString } from '@/lib/timezone-dynamic';
 
 export async function GET() {
   try {
-    const today = getTodayISTDateString();
+    const today = await getTodayDateString();
     const rows = await executeQuery(
       'SELECT total_orders, total_revenue FROM daily_sales WHERE sale_date = ?',
       [today]

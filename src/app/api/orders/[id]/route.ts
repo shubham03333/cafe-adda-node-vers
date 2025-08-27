@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery } from '@/lib/db';
 import { UpdateOrderRequest } from '@/types';
-import { getTodayISTDateString } from '@/lib/timezone'; // Import timezone utility
+import { getTodayDateString } from '@/lib/timezone-dynamic'; // Import dynamic timezone utility
 // PUT update order
 export async function PUT(
   request: NextRequest,
@@ -54,7 +54,7 @@ export async function PUT(
       if (orderRows && orderRows.length > 0) {
         const orderTotal = orderRows[0].total;
         console.log(`Order total for order ID ${id}: ₹${orderTotal}`);
-        const today = getTodayISTDateString(); // Use IST date
+        const today = await getTodayDateString(); // Use configured timezone date
         
         await executeQuery(`
           INSERT INTO daily_sales (sale_date, total_orders, total_revenue) 
@@ -64,6 +64,33 @@ export async function PUT(
             total_revenue = total_revenue + ?
         `, [today, orderTotal, orderTotal]);
         console.log(`Updated daily sales for ${today}: +1 order, +₹${orderTotal}`);
+      }
+    }
+
+    // Reduce stock quantity for each item in the order when status is served
+    if (body.status === 'served' && body.items) {
+      console.log(`Reducing stock for order ID: ${id}`);
+      
+      const stockAdjustments = body.items.map(item => ({
+        id: item.id,
+        quantity: item.quantity,
+        action: 'subtract'
+      }));
+
+      try {
+        const inventoryResponse = await fetch('http://localhost:3000/api/inventory', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(stockAdjustments)
+        });
+
+        if (!inventoryResponse.ok) {
+          console.error('Failed to update inventory:', await inventoryResponse.text());
+        } else {
+          console.log('Stock levels updated successfully');
+        }
+      } catch (error) {
+        console.error('Error updating inventory:', error);
       }
     }
 

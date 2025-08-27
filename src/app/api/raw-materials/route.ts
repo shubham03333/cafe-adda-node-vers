@@ -70,6 +70,42 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// DELETE /api/raw-materials - Delete a raw material
+export async function DELETE(request: NextRequest) {
+  try {
+    if (!db) {
+      throw new Error('Database connection not initialized');
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'Material ID is required' }, { status: 400 });
+    }
+
+    const connection = await db.getConnection();
+    
+    const [result] = await connection.execute(`
+      DELETE FROM raw_materials WHERE id = ?
+    `, [id]);
+
+    connection.release();
+
+    if ((result as any).affectedRows === 0) {
+      return NextResponse.json({ error: 'Raw material not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: 'Raw material deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting raw material:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete raw material' },
+      { status: 500 }
+    );
+  }
+}
+
 // PATCH /api/raw-materials - Update raw materials
 export async function PATCH(request: NextRequest) {
   try {

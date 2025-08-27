@@ -1,68 +1,73 @@
 /**
- * Timezone utilities for Indian Standard Time (IST)
- * IST is UTC+5:30
+ * Timezone utilities that use the configured system timezone
+ * This file provides backward compatibility with the old IST functions
+ * but now uses the dynamically configured timezone from system settings
  */
 
+import { 
+  getCurrentConfiguredDate, 
+  getTodayDateString, 
+  getYesterdayDateString,
+  formatDateTime,
+  isToday,
+  isYesterday
+} from './timezone-dynamic';
+
 /**
- * Get current date in IST timezone
+ * Get current date in configured timezone
+ * @deprecated Use getCurrentConfiguredDate() instead
  */
-export function getCurrentISTDate(): Date {
-  const now = new Date();
-  // IST is UTC+5:30
-  const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
-  return new Date(now.getTime() + istOffset);
+export async function getCurrentISTDate(): Promise<Date> {
+  return await getCurrentConfiguredDate();
 }
 
 /**
- * Get today's date string in YYYY-MM-DD format in IST
+ * Get today's date string in YYYY-MM-DD format in configured timezone
+ * @deprecated Use getTodayDateString() instead
  */
-export function getTodayISTDateString(): string {
-  const istDate = getCurrentISTDate();
-  return istDate.toISOString().split('T')[0];
+export function getTodayISTDateString(): Promise<string> {
+  return getTodayDateString();
 }
 
 /**
- * Get yesterday's date string in YYYY-MM-DD format in IST
+ * Get yesterday's date string in YYYY-MM-DD format in configured timezone
+ * @deprecated Use getYesterdayDateString() instead
  */
-export function getYesterdayISTDateString(): string {
-  const istDate = getCurrentISTDate();
-  const yesterday = new Date(istDate.getTime() - 24 * 60 * 60 * 1000);
-  return yesterday.toISOString().split('T')[0];
+export function getYesterdayISTDateString(): Promise<string> {
+  return getYesterdayDateString();
 }
 
 /**
- * Check if it's midnight in IST (between 00:00 and 00:01)
+ * Check if it's midnight in configured timezone (between 00:00 and 00:01)
  */
-export function isMidnightIST(): boolean {
-  const istDate = getCurrentISTDate();
-  const hours = istDate.getUTCHours();
-  const minutes = istDate.getUTCMinutes();
+export async function isMidnightIST(): Promise<boolean> {
+  const date = await getCurrentConfiguredDate();
+  const hours = date.getUTCHours();
+  const minutes = date.getUTCMinutes();
   
   return hours === 0 && minutes === 0;
 }
 
 /**
- * Format date for logging with IST timezone
+ * Format date for logging with configured timezone
+ * @deprecated Use formatDateTime() instead
  */
-export function formatISTDateTime(date: Date): string {
-  return date.toLocaleString('en-IN', {
-    timeZone: 'Asia/Kolkata',
-    hour12: false
-  });
+export function formatISTDateTime(date: Date): Promise<string> {
+  return formatDateTime(date);
 }
 
 /**
- * Check if a given date string is today in IST
+ * Check if a given date string is today in configured timezone
+ * @deprecated Use isToday() instead
  */
-export function isTodayIST(dateString: string): boolean {
-  const todayIST = getTodayISTDateString();
-  return dateString === todayIST;
+export function isTodayIST(dateString: string): Promise<boolean> {
+  return isToday(dateString);
 }
 
 /**
- * Check if a given date string is yesterday in IST
+ * Check if a given date string is yesterday in configured timezone
+ * @deprecated Use isYesterday() instead
  */
-export function isYesterdayIST(dateString: string): boolean {
-  const yesterdayIST = getYesterdayISTDateString();
-  return dateString === yesterdayIST;
+export function isYesterdayIST(dateString: string): Promise<boolean> {
+  return isYesterday(dateString);
 }

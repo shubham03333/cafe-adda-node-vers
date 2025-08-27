@@ -137,7 +137,7 @@ const CafeOrderSystem = () => {
 
   const updateOrderStatus = async (orderId: string, status: Order['status']) => {
     try {
-      const updateData: UpdateOrderRequest = { status };
+      const updateData: UpdateOrderRequest = { status, items: orders.find(order => order.id === orderId)?.items };
 
       const response = await fetch(`/api/orders/${orderId}`, {
         method: 'PUT',

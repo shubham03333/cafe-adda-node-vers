@@ -37,7 +37,9 @@ const RawMaterialsManager: React.FC<RawMaterialsManagerProps> = ({ onRawMaterial
     }
   };
 
-  const createRawMaterial = async () => {
+  const createRawMaterial = async (e: React.FormEvent) => {
+    e.preventDefault(); // Prevent default form submission behavior
+    
     const tempId = Date.now(); // Temporary ID for optimistic update
     
     try {
@@ -69,27 +71,12 @@ const RawMaterialsManager: React.FC<RawMaterialsManagerProps> = ({ onRawMaterial
       
       const result = await response.json();
       
-      // Fetch the actual created material to get all fields
-      const materialResponse = await fetch(`/api/raw-materials`);
-      if (materialResponse.ok) {
-        const materials = await materialResponse.json();
-        const createdMaterial = materials.find((m: RawMaterial) => m.id === result.id);
-        
-        if (createdMaterial) {
-          // Replace the optimistic material with the actual one from the server
-          setRawMaterials(prev => 
-            prev.map(material => 
-              material.id === tempId ? createdMaterial : material
-            )
-          );
-        } else {
-          // If we can't find the created material, refresh the list
-          await fetchRawMaterials();
-        }
-      } else {
-        // If fetching fails, refresh the list
-        await fetchRawMaterials();
-      }
+      // Update the optimistic material with the actual data from the server
+      setRawMaterials(prev => 
+        prev.map(material => 
+          material.id === tempId ? { ...result, id: result.id } : material
+        )
+      );
       
       setNewMaterial({
         name: '',
@@ -241,6 +228,34 @@ const RawMaterialsManager: React.FC<RawMaterialsManagerProps> = ({ onRawMaterial
     }
   };
 
+  const deleteRawMaterial = async (materialId: number) => {
+    if (!confirm('Are you sure you want to delete this raw material? This action cannot be undone.')) {
+      return;
+    }
+    
+    // Optimistically remove the material from the list
+    setRawMaterials(prev => prev.filter(material => material.id !== materialId));
+    
+    try {
+      const response = await fetch(`/api/raw-materials?id=${materialId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to delete raw material: ${response.status} ${errorText}`);
+      }
+      
+      console.log(`Raw material with ID ${materialId} deleted successfully`);
+      onRawMaterialUpdate?.();
+    } catch (err) {
+      // Revert the optimistic update if the API call fails
+      await fetchRawMaterials();
+      setError('Failed to delete raw material');
+      console.error('Error deleting raw material:', err);
+    }
+  };
+
   useEffect(() => {
     fetchRawMaterials();
   }, []);
@@ -261,85 +276,87 @@ const RawMaterialsManager: React.FC<RawMaterialsManagerProps> = ({ onRawMaterial
       {/* Add New Raw Material */}
       <div className="bg-white rounded-lg shadow-lg p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Raw Material</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-            <input
-              type="text"
-              value={newMaterial.name}
-              onChange={(e) => setNewMaterial({ ...newMaterial, name: e.target.value })}
+        <form onSubmit={createRawMaterial}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+              <input
+                type="text"
+                value={newMaterial.name}
+                onChange={(e) => setNewMaterial({ ...newMaterial, name: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 text-gray-900"
+                placeholder="e.g., Coffee Beans"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Unit Type</label>
+              <select
+                value={newMaterial.unit_type}
+                onChange={(e) => setNewMaterial({ ...newMaterial, unit_type: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 text-gray-900"
+              >
+                <option value="kg">kg</option>
+                <option value="g">g</option>
+                <option value="liter">liter</option>
+                <option value="ml">ml</option>
+                <option value="pieces">pieces</option>
+                <option value="packets">packets</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Initial Stock</label>
+              <input
+                type="number"
+                value={newMaterial.current_stock}
+                onChange={(e) => setNewMaterial({ ...newMaterial, current_stock: Number(e.target.value) })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 text-gray-900"
+                min="0"
+                step="0.1"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Stock Level</label>
+              <input
+                type="number"
+                value={newMaterial.min_stock_level}
+                onChange={(e) => setNewMaterial({ ...newMaterial, min_stock_level: Number(e.target.value) })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 text-gray-900"
+                min="0"
+                step="0.1"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Supplier Info</label>
+              <input
+                type="text"
+                value={newMaterial.supplier_info}
+                onChange={(e) => setNewMaterial({ ...newMaterial, supplier_info: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 text-gray-900"
+                placeholder="Supplier name/contact"
+              />
+            </div>
+          </div>
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea
+              value={newMaterial.description}
+              onChange={(e) => setNewMaterial({ ...newMaterial, description: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 text-gray-900"
-              placeholder="e.g., Coffee Beans"
+              rows={2}
+              placeholder="Brief description of the raw material"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Unit Type</label>
-            <select
-              value={newMaterial.unit_type}
-              onChange={(e) => setNewMaterial({ ...newMaterial, unit_type: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 text-gray-900"
-            >
-              <option value="kg">kg</option>
-              <option value="g">g</option>
-              <option value="liter">liter</option>
-              <option value="ml">ml</option>
-              <option value="pieces">pieces</option>
-              <option value="packets">packets</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Initial Stock</label>
-            <input
-              type="number"
-              value={newMaterial.current_stock}
-              onChange={(e) => setNewMaterial({ ...newMaterial, current_stock: Number(e.target.value) })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 text-gray-900"
-              min="0"
-              step="0.1"
-            />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Stock Level</label>
-            <input
-              type="number"
-              value={newMaterial.min_stock_level}
-              onChange={(e) => setNewMaterial({ ...newMaterial, min_stock_level: Number(e.target.value) })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 text-gray-900"
-              min="0"
-              step="0.1"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Supplier Info</label>
-            <input
-              type="text"
-              value={newMaterial.supplier_info}
-              onChange={(e) => setNewMaterial({ ...newMaterial, supplier_info: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 text-gray-900"
-              placeholder="Supplier name/contact"
-            />
-          </div>
-        </div>
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-          <textarea
-            value={newMaterial.description}
-            onChange={(e) => setNewMaterial({ ...newMaterial, description: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 text-gray-900"
-            rows={2}
-            placeholder="Brief description of the raw material"
-          />
-        </div>
-        <button
-          onClick={createRawMaterial}
-          disabled={!newMaterial.name}
-          className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Plus className="w-4 h-4 inline mr-2" />
-          Add Raw Material
-        </button>
+          <button
+            type="submit"
+            disabled={!newMaterial.name}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Plus className="w-4 h-4 inline mr-2" />
+            Add Raw Material
+          </button>
+        </form>
       </div>
 
       {/* Raw Materials List */}
@@ -428,6 +445,13 @@ const RawMaterialsManager: React.FC<RawMaterialsManagerProps> = ({ onRawMaterial
                           title="Subtract 1 unit"
                         >
                           <Minus className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => deleteRawMaterial(material.id)}
+                          className="p-2 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors"
+                          title="Delete this raw material"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>

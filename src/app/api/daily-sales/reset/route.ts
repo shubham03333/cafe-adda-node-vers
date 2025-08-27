@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { executeQuery } from '@/lib/db';
-import { getTodayISTDateString, getYesterdayISTDateString } from '@/lib/timezone';
+import { getTodayDateString, getYesterdayDateString } from '@/lib/timezone-dynamic';
 
 export async function POST(request: Request) {
   try {
@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     
     if (resetToday) {
       // Reset today's sales to 0 (manual reset from admin panel)
-      const todayIST = getTodayISTDateString();
+      const todayIST = await getTodayDateString();
       
       console.log(`🔄 Manual reset of today's sales initiated for: ${todayIST}`);
 
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       });
     } else {
       // Archive yesterday's sales (automatic end-of-day process)
-      const yesterdayIST = getYesterdayISTDateString();
+      const yesterdayIST = await getYesterdayDateString();
       
       console.log(`🔄 Manual daily sales archive initiated for: ${yesterdayIST}`);
 

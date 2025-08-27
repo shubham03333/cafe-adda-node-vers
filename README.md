@@ -172,3 +172,21 @@ mysql>
 
 
 SHOW CREATE TABLE daily_sales;
+
+
+
+set the timezone of mysql db to resolve the bug 
+SET time_zone = '+05:30'; SELECT NOW();
+
+mysql> SET GLOBAL time_zone = '+05:30';
+Query OK, 0 rows affected (0.00 sec)
+
+mysql>
+mysql>
+mysql> commit;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql>
+
+
+UPDATE daily_sales SET total_orders = 20, total_revenue = 724.00 WHERE sale_date = '2025-08-25';

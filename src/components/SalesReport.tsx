@@ -7,6 +7,9 @@ const SalesReport = () => {
   const [salesReport, setSalesReport] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [todaysSales, setTodaysSales] = useState({ total_orders: 0, total_revenue: 0 });
+  const [totalRevenue, setTotalRevenue] = useState({ total_orders: 0, total_revenue: 0 });
+  const [salesLoading, setSalesLoading] = useState(false);
   const generateSalesReport = async () => {
     try {
       const response = await fetch(`/api/sales-report?startDate=${startDate}&endDate=${endDate}`);
@@ -24,8 +27,148 @@ const SalesReport = () => {
     setError(null);
   };
 
+    // Fetch today's sales
+  const fetchTodaysSales = async () => {
+    setSalesLoading(true);
+    try {
+      const response = await fetch('/api/daily-sales/today');
+      if (!response.ok) throw new Error('Failed to fetch today\'s sales');
+      const data = await response.json();
+      setTodaysSales(data);
+    } catch (err) {
+      setError('Failed to load today\'s sales');
+      console.error(err);
+    } finally {
+      setSalesLoading(false);
+    }
+  };
+    // Reset today's sales
+  const resetTodaysSales = async () => {
+    if (!confirm('Are you sure you want to reset today\'s sales? This action cannot be undone.')) return;
+    
+    setSalesLoading(true);
+    try {
+      const response = await fetch('/api/daily-sales/reset?resetToday=true', {
+        method: 'POST'
+      });
+
+      if (!response.ok) throw new Error('Failed to reset today\'s sales');
+
+      await fetchTodaysSales();
+      
+    } catch (err) {
+      setError('Failed to reset today\'s sales');
+      console.error(err);
+    } finally {
+      setSalesLoading(false);
+    }
+  };
+
+    // Fetch total revenue
+  const fetchTotalRevenue = async () => {
+    setSalesLoading(true);
+    try {
+      const response = await fetch('/api/total-revenue');
+      if (!response.ok) throw new Error('Failed to fetch total revenue');
+      const data = await response.json();
+      setTotalRevenue(data);
+    } catch (err) {
+      setError('Failed to load total revenue');
+      console.error(err);
+    } finally {
+      setSalesLoading(false);
+    }
+  };
+
+  // Fetch all sales data
+  const fetchSalesData = async () => {
+    await Promise.all([fetchTodaysSales(), fetchTotalRevenue()]);
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
+        {/* Sales Metrics Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6">
+          {/* Today's Sales Card */}
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 border-l-4 border-red-500">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Today's Sales</h3>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <button
+                  onClick={fetchTodaysSales}
+                  disabled={salesLoading}
+                  className="p-1 sm:p-2 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors disabled:opacity-50 text-sm"
+                  title="Refresh Today's Sales"
+                >
+                  🔄
+                </button>
+                <button
+                  onClick={resetTodaysSales}
+                  disabled={salesLoading}
+                  className="p-1 sm:p-2 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors disabled:opacity-50 text-sm"
+                  title="Reset Today's Sales"
+                >
+                  🔄 Reset
+                </button>
+              </div>
+            </div>
+            {salesLoading ? (
+              <div className="text-center py-3 sm:py-4">
+                <div className="animate-pulse text-sm sm:text-base">Loading...</div>
+              </div>
+            ) : (
+              <div className="space-y-1 sm:space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm sm:text-base text-gray-600">Total Orders:</span>
+                  <span className="text-lg sm:text-xl font-bold text-red-600">{todaysSales.total_orders}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm sm:text-base text-gray-600">Revenue:</span>
+                  <span className="text-lg sm:text-xl font-bold text-green-600">₹{Number(todaysSales.total_revenue).toFixed(2)}</span>
+                </div>
+                <div className="text-xs text-gray-500 mt-1 sm:mt-2">
+                  Updated: {new Date().toLocaleTimeString()}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Total Revenue Card */}
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 border-l-4 border-green-500">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Total Revenue</h3>
+              <button
+                onClick={fetchTotalRevenue}
+                disabled={salesLoading}
+                className="p-1 sm:p-2 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors disabled:opacity-50 text-sm"
+                title="Refresh Total Revenue"
+              >
+                🔄
+              </button>
+            </div>
+            {salesLoading ? (
+              <div className="text-center py-3 sm:py-4">
+                <div className="animate-pulse text-sm sm:text-base">Loading...</div>
+              </div>
+            ) : (
+              <div className="space-y-1 sm:space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm sm:text-base text-gray-600">Total Orders:</span>
+                  <span className="text-lg sm:text-xl font-bold text-blue-600">{totalRevenue.total_orders}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm sm:text-base text-gray-600">Revenue:</span>
+                  <span className="text-lg sm:text-xl font-bold text-green-600">₹{Number(totalRevenue.total_revenue).toFixed(2)}</span>
+                </div>
+                <div className="text-xs text-gray-500 mt-1 sm:mt-2">
+                  Cumulative from all served orders
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+      
       <h2 className="text-xl font-bold mb-4 text-gray-900">Sales Report</h2>
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>

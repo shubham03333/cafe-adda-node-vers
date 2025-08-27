@@ -6,7 +6,8 @@ import { Save, X, Edit2, Trash2, Plus, BarChart3, Settings, Menu, Users, Package
 import Image from 'next/image';
 import { MenuItem } from '@/types';
 import SalesReport from '@/components/SalesReport';
-import InventoryDashboard from '@/components/InventoryDashboard'; // Import InventoryDashboard
+import InventoryDashboard from '@/components/InventoryDashboard';
+import UserManagement from '@/components/UserManagement'; // Import UserManagement
 
 const AdminControlPanel = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -318,11 +319,12 @@ const AdminControlPanel = () => {
           <div className="flex overflow-x-auto space-x-1 py-1 sm:py-0">
             {[
               { id: 'menu', label: 'Menu Management', icon: Menu },
+                { id: 'inventory', label: 'Inventory', icon: Package },
               { id: 'reports', label: 'Sales Reports', icon: BarChart3 },
               { id: 'demand', label: 'Demand Analysis', icon: TrendingUp, href: '/demand-analysis' },
-              { id: 'settings', label: 'System Settings', icon: Settings },
-              { id: 'users', label: 'User Management', icon: Users },
-              { id: 'inventory', label: 'Inventory', icon: Package }
+              // { id: 'settings', label: 'System Settings', icon: Settings },
+              { id: 'users', label: 'User Management', icon: Users }
+            
             ].map((tab) => {
               const IconComponent = tab.icon;
               
@@ -376,86 +378,34 @@ const AdminControlPanel = () => {
           </div>
         )}
 
-        {/* Sales Metrics Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6">
-          {/* Today's Sales Card */}
-          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 border-l-4 border-red-500">
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Today's Sales</h3>
-              <div className="flex items-center gap-1 sm:gap-2">
-                <button
-                  onClick={fetchTodaysSales}
-                  disabled={salesLoading}
-                  className="p-1 sm:p-2 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors disabled:opacity-50 text-sm"
-                  title="Refresh Today's Sales"
-                >
-                  🔄
-                </button>
-                <button
-                  onClick={resetTodaysSales}
-                  disabled={salesLoading}
-                  className="p-1 sm:p-2 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors disabled:opacity-50 text-sm"
-                  title="Reset Today's Sales"
-                >
-                  🔄 Reset
-                </button>
-              </div>
-            </div>
-            {salesLoading ? (
-              <div className="text-center py-3 sm:py-4">
-                <div className="animate-pulse text-sm sm:text-base">Loading...</div>
-              </div>
-            ) : (
-              <div className="space-y-1 sm:space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm sm:text-base text-gray-600">Total Orders:</span>
-                  <span className="text-lg sm:text-xl font-bold text-red-600">{todaysSales.total_orders}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm sm:text-base text-gray-600">Revenue:</span>
-                  <span className="text-lg sm:text-xl font-bold text-green-600">₹{Number(todaysSales.total_revenue).toFixed(2)}</span>
-                </div>
-                <div className="text-xs text-gray-500 mt-1 sm:mt-2">
-                  Updated: {new Date().toLocaleTimeString()}
-                </div>
-              </div>
-            )}
-          </div>
 
-          {/* Total Revenue Card */}
-          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 border-l-4 border-green-500">
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Total Revenue</h3>
-              <button
-                onClick={fetchTotalRevenue}
-                disabled={salesLoading}
-                className="p-1 sm:p-2 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors disabled:opacity-50 text-sm"
-                title="Refresh Total Revenue"
-              >
-                🔄
-              </button>
-            </div>
-            {salesLoading ? (
-              <div className="text-center py-3 sm:py-4">
-                <div className="animate-pulse text-sm sm:text-base">Loading...</div>
-              </div>
-            ) : (
-              <div className="space-y-1 sm:space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm sm:text-base text-gray-600">Total Orders:</span>
-                  <span className="text-lg sm:text-xl font-bold text-blue-600">{totalRevenue.total_orders}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm sm:text-base text-gray-600">Revenue:</span>
-                  <span className="text-lg sm:text-xl font-bold text-green-600">₹{Number(totalRevenue.total_revenue).toFixed(2)}</span>
-                </div>
-                <div className="text-xs text-gray-500 mt-1 sm:mt-2">
-                  Cumulative from all served orders
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         {/* Menu Management Tab */}
         {activeTab === 'menu' && (
@@ -662,11 +612,7 @@ const AdminControlPanel = () => {
         {activeTab === 'users' && (
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-xl font-semibold mb-4">User Management</h2>
-            <div className="text-center py-12 text-gray-500">
-              <Users className="w-16 h-16 mx-auto mb-4 opacity-50" />
-              <div className="text-lg">User Management Coming Soon</div>
-              <div className="text-sm mt-2">This feature will be implemented in the next update</div>
-            </div>
+            <UserManagement />
           </div>
         )}
 

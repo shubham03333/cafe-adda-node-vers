@@ -82,7 +82,7 @@ const ChefOrderSystem = () => {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
         <div className="text-center">
-          <div className="w-12 h-12 mx-auto mb-4 animate-pulse bg-red-600 rounded-full"></div>
+          <img src="/logo.png" alt="Logo" className="w-12 h-12 mx-auto mb-4 animate-pulse" />
           <div className="text-gray-700">Loading orders...</div>
         </div>
       </div>
