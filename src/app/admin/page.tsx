@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Save, X, Edit2, Trash2, Plus, BarChart3, Settings, Menu, Users, Package, LogOut } from 'lucide-react';
+import { Save, X, Edit2, Trash2, Plus, BarChart3, Settings, Menu, Users, Package, LogOut, TrendingUp } from 'lucide-react';
+import Image from 'next/image';
 import { MenuItem } from '@/types';
 import SalesReport from '@/components/SalesReport';
 import InventoryDashboard from '@/components/InventoryDashboard'; // Import InventoryDashboard
@@ -278,21 +279,32 @@ const AdminControlPanel = () => {
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
       <div className="bg-gradient-to-r from-red-600 to-red-800 shadow-lg">
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-white">Admin Control Panel</h1>
-            <div className="flex items-center gap-4">
+        <div className="max-w-6xl mx-auto px-4 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex-shrink-0">
+                <Image
+                  src="/logo.png"
+                  alt="Cafe Adda Logo"
+                  width={55}
+                  height={55}
+                  className="rounded-lg"
+                />
+              </div>
+              <h1 className="text-xl sm:text-2xl font-bold text-white">Admin Control Panel</h1>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-4">
               <a 
                 href="/" 
-                className="bg-white text-red-600 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className="bg-white text-red-600 px-3 py-1 sm:px-4 sm:py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm sm:text-base whitespace-nowrap"
               >
                 Back to Orders
               </a>
               <button
                 onClick={handleLogout}
-                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2"
+                className="bg-red-500 text-white px-3 py-1 sm:px-4 sm:py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base whitespace-nowrap"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
                 Logout
               </button>
             </div>
@@ -302,28 +314,47 @@ const AdminControlPanel = () => {
 
       {/* Navigation Tabs */}
       <div className="bg-white shadow-sm">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="flex space-x-1">
+        <div className="max-w-6xl mx-auto px-2 sm:px-4">
+          <div className="flex overflow-x-auto space-x-1 py-1 sm:py-0">
             {[
               { id: 'menu', label: 'Menu Management', icon: Menu },
               { id: 'reports', label: 'Sales Reports', icon: BarChart3 },
+              { id: 'demand', label: 'Demand Analysis', icon: TrendingUp, href: '/demand-analysis' },
               { id: 'settings', label: 'System Settings', icon: Settings },
               { id: 'users', label: 'User Management', icon: Users },
               { id: 'inventory', label: 'Inventory', icon: Package }
             ].map((tab) => {
               const IconComponent = tab.icon;
+              
+              if (tab.href) {
+                return (
+                  <a
+                    key={tab.id}
+                    href={tab.href}
+                    className={`px-3 py-2 sm:px-4 sm:py-3 flex items-center gap-1 sm:gap-2 transition-colors whitespace-nowrap ${
+                        activeTab === tab.id
+                          ? 'bg-red-600 text-white'
+                          : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                    }`}
+                  >
+                    <IconComponent className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="text-xs sm:text-sm">{tab.label}</span>
+                  </a>
+                );
+              }
+              
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-3 flex items-center gap-2 transition-colors ${
+                  className={`px-3 py-2 sm:px-4 sm:py-3 flex items-center gap-1 sm:gap-2 transition-colors whitespace-nowrap ${
                       activeTab === tab.id
                         ? 'bg-red-600 text-white'
                         : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
                   }`}
                 >
-                  <IconComponent className="w-4 h-4" />
-                  <span className="hidden sm:inline">{tab.label}</span>
+                  <IconComponent className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="text-xs sm:text-sm">{tab.label}</span>
                 </button>
               );
             })}
@@ -332,7 +363,7 @@ const AdminControlPanel = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {error && (
           <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded">
             <p>{error}</p>
@@ -346,16 +377,16 @@ const AdminControlPanel = () => {
         )}
 
         {/* Sales Metrics Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6">
           {/* Today's Sales Card */}
-          <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-red-500">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Today's Sales</h3>
-              <div className="flex items-center gap-2">
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 border-l-4 border-red-500">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Today's Sales</h3>
+              <div className="flex items-center gap-1 sm:gap-2">
                 <button
                   onClick={fetchTodaysSales}
                   disabled={salesLoading}
-                  className="p-2 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors disabled:opacity-50"
+                  className="p-1 sm:p-2 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors disabled:opacity-50 text-sm"
                   title="Refresh Today's Sales"
                 >
                   🔄
@@ -363,7 +394,7 @@ const AdminControlPanel = () => {
                 <button
                   onClick={resetTodaysSales}
                   disabled={salesLoading}
-                  className="p-2 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors disabled:opacity-50"
+                  className="p-1 sm:p-2 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors disabled:opacity-50 text-sm"
                   title="Reset Today's Sales"
                 >
                   🔄 Reset
@@ -371,20 +402,20 @@ const AdminControlPanel = () => {
               </div>
             </div>
             {salesLoading ? (
-              <div className="text-center py-4">
-                <div className="animate-pulse">Loading...</div>
+              <div className="text-center py-3 sm:py-4">
+                <div className="animate-pulse text-sm sm:text-base">Loading...</div>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-1 sm:space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Total Orders:</span>
-                  <span className="text-xl font-bold text-red-600">{todaysSales.total_orders}</span>
+                  <span className="text-sm sm:text-base text-gray-600">Total Orders:</span>
+                  <span className="text-lg sm:text-xl font-bold text-red-600">{todaysSales.total_orders}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Revenue:</span>
-                  <span className="text-xl font-bold text-green-600">₹{Number(todaysSales.total_revenue).toFixed(2)}</span>
+                  <span className="text-sm sm:text-base text-gray-600">Revenue:</span>
+                  <span className="text-lg sm:text-xl font-bold text-green-600">₹{Number(todaysSales.total_revenue).toFixed(2)}</span>
                 </div>
-                <div className="text-xs text-gray-500 mt-2">
+                <div className="text-xs text-gray-500 mt-1 sm:mt-2">
                   Updated: {new Date().toLocaleTimeString()}
                 </div>
               </div>
@@ -392,33 +423,33 @@ const AdminControlPanel = () => {
           </div>
 
           {/* Total Revenue Card */}
-          <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-green-500">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Total Revenue</h3>
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 border-l-4 border-green-500">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Total Revenue</h3>
               <button
                 onClick={fetchTotalRevenue}
                 disabled={salesLoading}
-                className="p-2 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors disabled:opacity-50"
+                className="p-1 sm:p-2 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors disabled:opacity-50 text-sm"
                 title="Refresh Total Revenue"
               >
                 🔄
               </button>
             </div>
             {salesLoading ? (
-              <div className="text-center py-4">
-                <div className="animate-pulse">Loading...</div>
+              <div className="text-center py-3 sm:py-4">
+                <div className="animate-pulse text-sm sm:text-base">Loading...</div>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-1 sm:space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Total Orders:</span>
-                  <span className="text-xl font-bold text-blue-600">{totalRevenue.total_orders}</span>
+                  <span className="text-sm sm:text-base text-gray-600">Total Orders:</span>
+                  <span className="text-lg sm:text-xl font-bold text-blue-600">{totalRevenue.total_orders}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Revenue:</span>
-                  <span className="text-xl font-bold text-green-600">₹{Number(totalRevenue.total_revenue).toFixed(2)}</span>
+                  <span className="text-sm sm:text-base text-gray-600">Revenue:</span>
+                  <span className="text-lg sm:text-xl font-bold text-green-600">₹{Number(totalRevenue.total_revenue).toFixed(2)}</span>
                 </div>
-                <div className="text-xs text-gray-500 mt-2">
+                <div className="text-xs text-gray-500 mt-1 sm:mt-2">
                   Cumulative from all served orders
                 </div>
               </div>

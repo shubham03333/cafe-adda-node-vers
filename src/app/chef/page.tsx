@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import ChefOrderSystem from '@/components/ChefOrderSystem';
 
 export default function ChefPage() {
@@ -36,14 +37,5 @@ export default function ChefPage() {
     );
   }
 
-  return (
-    <div>
-      <div className="bg-gradient-to-r from-orange-600 to-red-600 shadow-lg">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-white text-center">Chef Dashboard</h1>
-        </div>
-      </div>
-      <ChefOrderSystem />
-    </div>
-  );
+  return <ChefOrderSystem />;
 }

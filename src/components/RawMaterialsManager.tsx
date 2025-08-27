@@ -38,14 +38,58 @@ const RawMaterialsManager: React.FC<RawMaterialsManagerProps> = ({ onRawMaterial
   };
 
   const createRawMaterial = async () => {
+    const tempId = Date.now(); // Temporary ID for optimistic update
+    
     try {
+      // Optimistically add the new material to the list
+      const optimisticMaterial: RawMaterial = {
+        id: tempId,
+        name: newMaterial.name || '',
+        description: newMaterial.description || '',
+        unit_type: newMaterial.unit_type || 'kg',
+        current_stock: newMaterial.current_stock || 0,
+        min_stock_level: newMaterial.min_stock_level || 5,
+        supplier_info: newMaterial.supplier_info || '',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      setRawMaterials(prev => [...prev, optimisticMaterial]);
+
       const response = await fetch('/api/raw-materials', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newMaterial)
       });
 
-      if (!response.ok) throw new Error('Failed to create raw material');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to create raw material: ${response.status} ${errorText}`);
+      }
+      
+      const result = await response.json();
+      
+      // Fetch the actual created material to get all fields
+      const materialResponse = await fetch(`/api/raw-materials`);
+      if (materialResponse.ok) {
+        const materials = await materialResponse.json();
+        const createdMaterial = materials.find((m: RawMaterial) => m.id === result.id);
+        
+        if (createdMaterial) {
+          // Replace the optimistic material with the actual one from the server
+          setRawMaterials(prev => 
+            prev.map(material => 
+              material.id === tempId ? createdMaterial : material
+            )
+          );
+        } else {
+          // If we can't find the created material, refresh the list
+          await fetchRawMaterials();
+        }
+      } else {
+        // If fetching fails, refresh the list
+        await fetchRawMaterials();
+      }
       
       setNewMaterial({
         name: '',
@@ -56,9 +100,10 @@ const RawMaterialsManager: React.FC<RawMaterialsManagerProps> = ({ onRawMaterial
         supplier_info: ''
       });
       
-      await fetchRawMaterials();
       onRawMaterialUpdate?.();
     } catch (err) {
+      // Revert the optimistic update if the API call fails
+      setRawMaterials(prev => prev.filter(material => material.id !== tempId));
       setError('Failed to create raw material');
       console.error(err);
     }
@@ -84,21 +129,115 @@ const RawMaterialsManager: React.FC<RawMaterialsManagerProps> = ({ onRawMaterial
   };
 
   const adjustStock = async (materialId: number, action: 'add' | 'subtract', quantity: number = 1) => {
+    console.log(`Adjusting stock for material ID: ${materialId}, Action: ${action}, Quantity: ${quantity}`);
+    
+    // Optimistically update the raw materials state and get the updated material
+    let updatedMaterial: RawMaterial | undefined;
+    
+    setRawMaterials(prevMaterials => {
+      return prevMaterials.map(material => {
+        if (material.id === materialId) {
+          const newStock = action === 'add' 
+            ? material.current_stock + quantity
+            : Math.max(0, material.current_stock - quantity);
+          console.log(`New stock for ${material.name}: ${newStock}`);
+          updatedMaterial = { ...material, current_stock: newStock };
+          return updatedMaterial;
+        }
+        return material;
+      });
+    });
+    
     try {
-      const material = rawMaterials.find(m => m.id === materialId);
-      if (!material) return;
+      if (!updatedMaterial) {
+        console.error(`Material with ID ${materialId} not found in state.`);
+        return;
+      }
 
       const update: RawMaterialUpdate = {
         id: materialId,
-        current_stock: action === 'add' 
-          ? material.current_stock + quantity
-          : Math.max(0, material.current_stock - quantity)
+        current_stock: updatedMaterial.current_stock
       };
 
-      await updateRawMaterial(update);
+      console.log(`Sending update to API:`, update);
+
+      const response = await fetch('/api/raw-materials', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify([update])
+      });
+
+      if (!response.ok) throw new Error('Failed to update raw material');
+      
+      console.log(`Stock updated successfully for material ID: ${materialId}`);
+      // No need to call fetchRawMaterials() - optimistic update already handled it
     } catch (err) {
+      // Revert the optimistic update if the API call fails
+      setRawMaterials(prevMaterials => {
+        return prevMaterials.map(material => {
+          if (material.id === materialId) {
+            const originalStock = material.current_stock;
+            const newStock = action === 'add' 
+              ? originalStock - quantity
+              : originalStock + quantity;
+            return { ...material, current_stock: Math.max(0, newStock) };
+          }
+          return material;
+        });
+      });
       setError('Failed to adjust stock');
-      console.error(err);
+      console.error('Error adjusting stock:', err);
+    }
+  };
+
+  const updateStockDirectly = async (materialId: number, newStock: number) => {
+    console.log(`Updating stock directly for material ID: ${materialId}, New stock: ${newStock}`);
+    
+    // Optimistically update the raw materials state
+    setRawMaterials(prevMaterials => {
+      return prevMaterials.map(material => {
+        if (material.id === materialId) {
+          return { ...material, current_stock: Math.max(0, newStock) };
+        }
+        return material;
+      });
+    });
+    
+    try {
+      const material = rawMaterials.find(m => m.id === materialId);
+      if (!material) {
+        console.error(`Material with ID ${materialId} not found in state.`);
+        return;
+      }
+
+      const update: RawMaterialUpdate = {
+        id: materialId,
+        current_stock: Math.max(0, newStock)
+      };
+
+      console.log(`Sending direct update to API:`, update);
+
+      const response = await fetch('/api/raw-materials', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify([update])
+      });
+
+      if (!response.ok) throw new Error('Failed to update raw material');
+      
+      console.log(`Stock updated successfully for material ID: ${materialId}`);
+    } catch (err) {
+      // Revert the optimistic update if the API call fails
+      setRawMaterials(prevMaterials => {
+        return prevMaterials.map(material => {
+          if (material.id === materialId) {
+            return { ...material, current_stock: material.current_stock };
+          }
+          return material;
+        });
+      });
+      setError('Failed to update stock');
+      console.error('Error updating stock:', err);
     }
   };
 
@@ -129,7 +268,7 @@ const RawMaterialsManager: React.FC<RawMaterialsManagerProps> = ({ onRawMaterial
               type="text"
               value={newMaterial.name}
               onChange={(e) => setNewMaterial({ ...newMaterial, name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 text-gray-900"
               placeholder="e.g., Coffee Beans"
             />
           </div>
@@ -138,7 +277,7 @@ const RawMaterialsManager: React.FC<RawMaterialsManagerProps> = ({ onRawMaterial
             <select
               value={newMaterial.unit_type}
               onChange={(e) => setNewMaterial({ ...newMaterial, unit_type: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 text-gray-900"
             >
               <option value="kg">kg</option>
               <option value="g">g</option>
@@ -154,7 +293,7 @@ const RawMaterialsManager: React.FC<RawMaterialsManagerProps> = ({ onRawMaterial
               type="number"
               value={newMaterial.current_stock}
               onChange={(e) => setNewMaterial({ ...newMaterial, current_stock: Number(e.target.value) })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 text-gray-900"
               min="0"
               step="0.1"
             />
@@ -167,7 +306,7 @@ const RawMaterialsManager: React.FC<RawMaterialsManagerProps> = ({ onRawMaterial
               type="number"
               value={newMaterial.min_stock_level}
               onChange={(e) => setNewMaterial({ ...newMaterial, min_stock_level: Number(e.target.value) })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 text-gray-900"
               min="0"
               step="0.1"
             />
@@ -178,7 +317,7 @@ const RawMaterialsManager: React.FC<RawMaterialsManagerProps> = ({ onRawMaterial
               type="text"
               value={newMaterial.supplier_info}
               onChange={(e) => setNewMaterial({ ...newMaterial, supplier_info: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 text-gray-900"
               placeholder="Supplier name/contact"
             />
           </div>
@@ -188,7 +327,7 @@ const RawMaterialsManager: React.FC<RawMaterialsManagerProps> = ({ onRawMaterial
           <textarea
             value={newMaterial.description}
             onChange={(e) => setNewMaterial({ ...newMaterial, description: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 text-gray-900"
             rows={2}
             placeholder="Brief description of the raw material"
           />
@@ -242,6 +381,38 @@ const RawMaterialsManager: React.FC<RawMaterialsManagerProps> = ({ onRawMaterial
                       {statusText}
                     </td>
                     <td className="py-3 px-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.1"
+                          defaultValue={1}
+                          className="w-20 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 text-gray-900"
+                          placeholder="Qty"
+                          data-material-id={material.id}
+                        />
+                        <button
+                          onClick={() => {
+                            const input = document.querySelector(`input[data-material-id="${material.id}"]`) as HTMLInputElement;
+                            if (input) {
+                              const quantity = Number(input.value);
+                              console.log(`Setting quantity: ${quantity} for material ID: ${material.id}`); // Debug log
+                              if (quantity >= 0) {
+                                updateStockDirectly(material.id, quantity);
+                                input.value = '1'; // Reset to default
+                              } else {
+                                console.error('Invalid quantity entered'); // Debug log for invalid input
+                              }
+                            } else {
+                              console.error('Input element not found for material ID:', material.id);
+                            }
+                          }}
+                          className="p-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
+                          title="Set stock to specified quantity"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                      </div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => adjustStock(material.id, 'add', 1)}

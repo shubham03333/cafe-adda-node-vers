@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Package, AlertTriangle, CheckCircle, RefreshCw, Plus, Minus, Box } from 'lucide-react';
+import { Package, AlertTriangle, CheckCircle, RefreshCw, Plus, Minus, Box, Edit } from 'lucide-react';
 import { MenuItem } from '@/types';
 import RawMaterialsManager from './RawMaterialsManager';
 
@@ -15,6 +15,7 @@ interface InventoryStats {
 const InventoryDashboard: React.FC = () => {
   const [inventory, setInventory] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<InventoryStats>({
     totalItems: 0,
@@ -24,19 +25,27 @@ const InventoryDashboard: React.FC = () => {
   });
   const [activeTab, setActiveTab] = useState<'menu' | 'raw-materials'>('menu');
 
-  const fetchInventory = async () => {
+const fetchInventory = async (isBackgroundRefresh = false) => {
     try {
-      setLoading(true);
-      const response = await fetch('/api/inventory');
-      if (!response.ok) throw new Error('Failed to fetch inventory');
-      const data = await response.json();
-      setInventory(data);
-      calculateStats(data);
+        if (!isBackgroundRefresh) {
+            setLoading(true);
+        } else {
+            setIsRefreshing(true);
+        }
+        const response = await fetch('/api/inventory');
+        if (!response.ok) throw new Error('Failed to fetch inventory');
+        const data = await response.json();
+        setInventory(data);
+        calculateStats(data);
     } catch (err) {
-      setError('Failed to load inventory');
-      console.error(err);
+        setError('Failed to load inventory');
+        console.error(err);
     } finally {
-      setLoading(false);
+        if (!isBackgroundRefresh) {
+            setLoading(false);
+        } else {
+            setIsRefreshing(false);
+        }
     }
   };
 
@@ -59,25 +68,102 @@ const InventoryDashboard: React.FC = () => {
     });
   };
 
-  const adjustStock = async (itemId: number, action: 'add' | 'subtract', quantity: number = 1) => {
+  const updateStockDirectly = async (itemId: number, newStock: number) => {
+    console.log(`Updating stock directly for item ID: ${itemId}, New stock: ${newStock}`);
+    
+    // Optimistically update the inventory state
+    setInventory(prevInventory => {
+      return prevInventory.map(item => {
+        if (item.id === itemId) {
+          return { ...item, stock_quantity: Math.max(0, newStock) };
+        }
+        return item;
+      });
+    });
+    
     try {
       const response = await fetch('/api/inventory', {
-        method: 'PATCH',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify([{ id: itemId, quantity, action }])
+        body: JSON.stringify([{ id: itemId, stock_quantity: Math.max(0, newStock) }])
       });
 
-      if (!response.ok) throw new Error('Failed to adjust stock');
+      if (!response.ok) throw new Error('Failed to update stock');
       
-      await fetchInventory(); // Refresh inventory data
+      console.log(`Stock updated successfully for item ID: ${itemId}`);
     } catch (err) {
-      setError('Failed to adjust stock');
-      console.error(err);
+      // Revert the optimistic update if the API call fails
+      setInventory(prevInventory => {
+        return prevInventory.map(item => {
+          if (item.id === itemId) {
+            return { ...item, stock_quantity: item.stock_quantity };
+          }
+          return item;
+        });
+      });
+      setError('Failed to update stock');
+      console.error('Error updating stock:', err);
     }
+  };
+
+  const adjustStock = async (itemId: number, action: 'add' | 'subtract', quantity: number = 1) => {
+    // Optimistically update the inventory state
+    setInventory(prevInventory => {
+        return prevInventory.map(item => {
+            if (item.id === itemId) {
+                const newStock = action === 'add' ? (item.stock_quantity || 0) + quantity : (item.stock_quantity || 0) - quantity;
+                return { ...item, stock_quantity: Math.max(0, newStock) }; // Ensure stock doesn't go below 0
+            }
+            return item;
+        });
+    });
+    
+    try {
+        const response = await fetch('/api/inventory', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify([{ id: itemId, quantity, action }])
+        });
+
+        if (!response.ok) throw new Error('Failed to adjust stock');
+        
+        // Optionally, you can fetch the inventory again if needed
+        // await fetchInventory(); 
+    } catch (err) {
+        // Revert the optimistic update if the API call fails
+        setInventory(prevInventory => {
+            return prevInventory.map(item => {
+                if (item.id === itemId) {
+                    const newStock = action === 'add' ? (item.stock_quantity || 0) - quantity : (item.stock_quantity || 0) + quantity;
+                    return { ...item, stock_quantity: Math.max(0, newStock) }; // Ensure stock doesn't go below 0
+                }
+                return item;
+            });
+        });
+        setError('Failed to adjust stock');
+        console.error(err);
+    }
+  };
+
+  // Wrapper functions for button clicks
+  const handleRefreshClick = () => {
+    fetchInventory(false); // Manual refresh - not background
+  };
+
+  const handleTryAgainClick = () => {
+    fetchInventory(false); // Manual refresh - not background
   };
 
   useEffect(() => {
     fetchInventory();
+    
+    // Set up polling for real-time updates
+    const pollingInterval = setInterval(() => {
+      fetchInventory(true); // Pass true for background refresh
+    }, 5000); // Poll every 5 seconds
+    
+    // Clean up interval on component unmount
+    return () => clearInterval(pollingInterval);
   }, []);
 
   if (loading) {
@@ -96,7 +182,7 @@ const InventoryDashboard: React.FC = () => {
       <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded">
         <p>{error}</p>
         <button 
-          onClick={fetchInventory}
+          onClick={handleTryAgainClick}
           className="mt-2 text-red-600 hover:text-red-800 underline"
         >
           Try Again
@@ -186,7 +272,7 @@ const InventoryDashboard: React.FC = () => {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold text-gray-900">Menu Items Inventory</h2>
               <button
-                onClick={fetchInventory}
+                onClick={handleRefreshClick}
                 className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -236,11 +322,43 @@ const InventoryDashboard: React.FC = () => {
                           {status === 'out-of-stock' && 'Out of Stock'}
                         </td>
                         <td className="py-3 px-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <input
+                              type="number"
+                              min="0"
+                              step="1"
+                              defaultValue={1}
+                              className="w-20 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-600 text-gray-900"
+                              placeholder="Qty"
+                              data-item-id={item.id}
+                            />
+                            <button
+                              onClick={() => {
+                                const input = document.querySelector(`input[data-item-id="${item.id}"]`) as HTMLInputElement;
+                                if (input) {
+                                  const quantity = Number(input.value);
+                                  console.log(`Setting quantity: ${quantity} for item ID: ${item.id}`);
+                                  if (quantity >= 0) {
+                                    updateStockDirectly(item.id, quantity);
+                                    input.value = '1'; // Reset to default
+                                  } else {
+                                    console.error('Invalid quantity entered');
+                                  }
+                                } else {
+                                  console.error('Input element not found for item ID:', item.id);
+                                }
+                              }}
+                              className="p-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
+                              title="Set stock to specified quantity"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                          </div>
                           <div className="flex gap-2">
                             <button
                               onClick={() => adjustStock(item.id, 'add')}
                               className="p-2 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
-                              title="Add Stock"
+                              title="Add 1 unit"
                             >
                               <Plus className="w-4 h-4" />
                             </button>
@@ -248,7 +366,7 @@ const InventoryDashboard: React.FC = () => {
                               onClick={() => adjustStock(item.id, 'subtract')}
                               disabled={stock <= 0}
                               className="p-2 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                              title="Subtract Stock"
+                              title="Subtract 1 unit"
                             >
                               <Minus className="w-4 h-4" />
                             </button>
