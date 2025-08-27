@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 // PUT - Update a user
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   if (!db) {
     return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
@@ -13,7 +13,7 @@ export async function PUT(
 
   try {
     const { username, password, role_id } = await request.json();
-    const id = params.id;
+    const { id } = await params;
     
     if (!username || !role_id) {
       return NextResponse.json(
@@ -65,7 +65,7 @@ export async function PUT(
 // DELETE - Delete a user
 export async function DELETE(
   request: NextRequest,
-  { params }: Promise<{ params: { id: string } }>
+  { params }: { params: Promise<{ id: string }> }
 ) {
   if (!db) {
     return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
