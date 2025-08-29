@@ -5,6 +5,8 @@ export interface MenuItem {
   is_available: boolean;
   category: string;
   position?: number; // Added position field
+  image_url?: string; // Added image URL field
+  description?: string; // Added description field
   // Inventory fields
   stock_quantity?: number;
   low_stock_threshold?: number;
