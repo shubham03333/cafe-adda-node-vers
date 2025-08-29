@@ -16,7 +16,7 @@ const TIMEZONE_OFFSETS: Record<string, number> = {
 /**
  * Get the configured timezone from system settings
  */
-async function getConfiguredTimezone(): Promise<string> {
+export async function getConfiguredTimezone(): Promise<string> {
   if (!db) {
     return 'IST'; // Default to IST if database not configured
   }

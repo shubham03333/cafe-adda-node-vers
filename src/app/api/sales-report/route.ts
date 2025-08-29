@@ -25,16 +25,16 @@ export async function GET(request: NextRequest) {
       [startDate, endDate]
     ) as any[];
 
-    // Query to get daily sales breakdown
+    // Query to get daily sales breakdown - format date as YYYY-MM-DD string
     const dailySales = await executeQuery(
       `SELECT 
-        DATE(order_time) as date,
+        DATE_FORMAT(order_time, '%Y-%m-%d') as date,
         SUM(total) as revenue,
         COUNT(*) as orders
        FROM orders 
        WHERE order_time BETWEEN ? AND ? 
          AND status = 'served'
-       GROUP BY DATE(order_time)
+       GROUP BY DATE_FORMAT(order_time, '%Y-%m-%d')
        ORDER BY date DESC`,
       [startDate, endDate]
     ) as any[];

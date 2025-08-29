@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, X } from 'lucide-react';
+import { BarChart3, X, Loader2 } from 'lucide-react';
 
 const SalesReport = () => {
   const [startDate, setStartDate] = useState('');
@@ -10,6 +10,34 @@ const SalesReport = () => {
   const [todaysSales, setTodaysSales] = useState({ total_orders: 0, total_revenue: 0 });
   const [totalRevenue, setTotalRevenue] = useState({ total_orders: 0, total_revenue: 0 });
   const [salesLoading, setSalesLoading] = useState(false);
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('asc');
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [orderDetails, setOrderDetails] = useState<any>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [currentTime, setCurrentTime] = useState('');
+
+  // Update current time with IST formatting
+  useEffect(() => {
+    const updateTime = async () => {
+      try {
+        const response = await fetch('/api/time/current');
+        if (!response.ok) throw new Error('Failed to fetch current time');
+        const data = await response.json();
+        setCurrentTime(data.currentTime);
+      } catch (error) {
+        console.error('Error getting current time:', error);
+        setCurrentTime(new Date().toLocaleTimeString());
+      }
+    };
+
+    updateTime();
+    const intervalId = setInterval(updateTime, 1000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   const generateSalesReport = async () => {
     try {
       const response = await fetch(`/api/sales-report?startDate=${startDate}&endDate=${endDate}`);
@@ -31,7 +59,7 @@ const SalesReport = () => {
     const intervalId = setInterval(() => {
       fetchTodaysSales();
       fetchTotalRevenue();
-    }, 30000);
+    }, 15000);
 
     // Cleanup interval on unmount
     return () => clearInterval(intervalId);
@@ -100,6 +128,84 @@ const SalesReport = () => {
     await Promise.all([fetchTodaysSales(), fetchTotalRevenue()]);
   };
 
+  // Fetch daily order details
+  const fetchDailyOrderDetails = async (date: string) => {
+    setDetailsLoading(true);
+
+    // Parse the date string to Date object
+    const inputDate = new Date(date);
+    // Add one day (24 hours)
+    inputDate.setDate(inputDate.getDate() + 1);
+    // Convert back to YYYY-MM-DD string
+    const nextDay = inputDate.toISOString().split('T')[0];
+
+    // Set selectedDate to next day
+    setSelectedDate(nextDay);
+
+// const prevDate = (() => {
+//   const dateObj = new Date(nextDay);
+//   dateObj.setDate(dateObj.getDate() - 1);
+//   return dateObj.toLocaleDateString();
+// })();
+
+    try {
+      // Use the date as-is without conversion to avoid timezone issues
+      const response = await fetch(`/api/daily-orders/${date}`);
+      if (!response.ok) throw new Error('Failed to fetch daily order details');
+      const data = await response.json();
+      setOrderDetails(data);
+      setShowOrderModal(true);
+    } catch (err) {
+      setError('Failed to load daily order details');
+      console.error(err);
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
+
+  const closeOrderModal = () => {
+    setShowOrderModal(false);
+    setOrderDetails(null);
+    setSelectedDate(null);
+  };
+
+  // Date range preset handler
+  const setDateRangePreset = (preset: string) => {
+    const today = new Date();
+    const startOfDay = new Date(today);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const startOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const endOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+
+    switch (preset) {
+      case 'today':
+        setStartDate(startOfDay.toISOString().split('T')[0]);
+        setEndDate(today.toISOString().split('T')[0]);
+        break;
+      case 'thisWeek':
+        setStartDate(startOfWeek.toISOString().split('T')[0]);
+        setEndDate(today.toISOString().split('T')[0]);
+        break;
+      case 'thisMonth':
+        setStartDate(startOfMonth.toISOString().split('T')[0]);
+        setEndDate(today.toISOString().split('T')[0]);
+        break;
+      case 'lastMonth':
+        setStartDate(startOfLastMonth.toISOString().split('T')[0]);
+        setEndDate(endOfLastMonth.toISOString().split('T')[0]);
+        break;
+    }
+  };
+  
+
+
+
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
         {/* Sales Metrics Overview */}
@@ -134,15 +240,15 @@ const SalesReport = () => {
             ) : (
               <div className="space-y-1 sm:space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm sm:text-base text-gray-600">Total Orders:</span>
-                  <span className="text-lg sm:text-xl font-bold text-red-600">{todaysSales.total_orders}</span>
+                  <span className="text-sm sm:text-base text-gray-800">Total Orders:</span>
+                  <span className="text-lg sm:text-xl font-bold text-red-700">{todaysSales.total_orders}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm sm:text-base text-gray-600">Revenue:</span>
-                  <span className="text-lg sm:text-xl font-bold text-green-600">₹{Number(todaysSales.total_revenue).toFixed(2)}</span>
+                  <span className="text-sm sm:text-base text-gray-800">Revenue:</span>
+                  <span className="text-lg sm:text-xl font-bold text-green-700">₹{Number(todaysSales.total_revenue).toFixed(2)}</span>
                 </div>
                 <div className="text-xs text-gray-500 mt-1 sm:mt-2">
-                  Updated: {new Date().toLocaleTimeString()}
+                  Updated: {currentTime || new Date().toLocaleTimeString()}
                 </div>
               </div>
             )}
@@ -168,12 +274,12 @@ const SalesReport = () => {
             ) : (
               <div className="space-y-1 sm:space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm sm:text-base text-gray-600">Total Orders:</span>
-                  <span className="text-lg sm:text-xl font-bold text-blue-600">{totalRevenue.total_orders}</span>
+                  <span className="text-sm sm:text-base text-gray-800">Total Orders:</span>
+                  <span className="text-lg sm:text-xl font-bold text-blue-700">{totalRevenue.total_orders}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm sm:text-base text-gray-600">Revenue:</span>
-                  <span className="text-lg sm:text-xl font-bold text-green-600">₹{Number(totalRevenue.total_revenue).toFixed(2)}</span>
+                  <span className="text-sm sm:text-base text-gray-800">Revenue:</span>
+                  <span className="text-lg sm:text-xl font-bold text-green-700">₹{Number(totalRevenue.total_revenue).toFixed(2)}</span>
                 </div>
                 <div className="text-xs text-gray-500 mt-1 sm:mt-2">
                   Cumulative from all served orders
@@ -185,6 +291,35 @@ const SalesReport = () => {
 
       
       <h2 className="text-xl font-bold mb-4 text-gray-900">Sales Report</h2>
+      
+      {/* Date Range Presets */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <button
+          onClick={() => setDateRangePreset('today')}
+          className="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-sm"
+        >
+          Today
+        </button>
+        <button
+          onClick={() => setDateRangePreset('thisWeek')}
+          className="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-sm"
+        >
+          This Week
+        </button>
+        <button
+          onClick={() => setDateRangePreset('thisMonth')}
+          className="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-sm"
+        >
+          This Month
+        </button>
+        <button
+          onClick={() => setDateRangePreset('lastMonth')}
+          className="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-sm"
+        >
+          Last Month
+        </button>
+      </div>
+      
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-800 mb-1">Start Date</label>
@@ -232,22 +367,67 @@ const SalesReport = () => {
             
             {salesReport.daily_sales && salesReport.daily_sales.length > 0 && (
               <div>
-                <h4 className="font-medium text-gray-900 mb-2">Daily Breakdown:</h4>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium text-gray-900">Daily Breakdown:</h4>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="text-sm border border-gray-300 rounded px-2 py-1 text-gray-900 bg-white"
+                    >
+                      <option value="date">Date</option>
+                      <option value="day">Day</option>
+                      <option value="revenue">Revenue</option>
+                    </select>
+                    <button
+                      onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                      className="text-sm text-gray-800 bg-gray-100 px-2 py-1 rounded hover:bg-gray-200"
+                    >
+                      {sortOrder === 'asc' ? '↑' : '↓'}
+                    </button>
+                  </div>
+                </div>
                 <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                   <div className="space-y-2">
-                    {salesReport.daily_sales.map((day: any) => (
-                      <div key={day.date} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                        <div className="flex items-center space-x-4 flex-1">
-                          <span className="text-sm text-gray-700 min-w-[100px]">
-                            {new Date(day.date).toLocaleDateString()}
-                          </span>
-                          <span className="text-sm font-medium text-gray-800 min-w-[100px]">
-                            {new Date(day.date).toLocaleDateString('en-US', { weekday: 'long' })}
-                          </span>
-                        </div>
-                        <span className="font-medium text-gray-900">₹{day.revenue}</span>
-                      </div>
-                    ))}
+{salesReport.daily_sales
+  .sort((a: any, b: any) => {
+    let aValue, bValue;
+    
+    if (sortBy === 'date') {
+      aValue = new Date(a.date).getTime();
+      bValue = new Date(b.date).getTime();
+    } else if (sortBy === 'day') {
+      aValue = new Date(a.date).toLocaleDateString('en-US', { weekday: 'long' });
+      bValue = new Date(b.date).toLocaleDateString('en-US', { weekday: 'long' });
+    } else {
+      aValue = a.revenue;
+      bValue = b.revenue;
+    }
+    
+    if (sortOrder === 'asc') {
+      return aValue > bValue ? 1 : -1;
+    } else {
+      return aValue < bValue ? 1 : -1;
+    }
+  })
+  .map((day: any) => (
+  <div
+    key={day.date}
+    className="flex items-center justify-between p-2 bg-gray-50 rounded cursor-pointer hover:bg-gray-100"
+    onClick={() => fetchDailyOrderDetails(day.date)}
+    title="Click to view order details"
+  >
+    <div className="flex items-center space-x-4 flex-1">
+      <span className="text-sm text-gray-800 min-w-[100px]">
+        {new Date(day.date).toLocaleDateString()}
+      </span>
+      <span className="text-sm font-medium text-gray-900 min-w-[100px]">
+        {new Date(day.date).toLocaleDateString('en-US', { weekday: 'long' })}
+      </span>
+    </div>
+    <span className="font-bold text-gray-900">₹{day.revenue}</span>
+  </div>
+))}
                   </div>
                 </div>
               </div>
@@ -259,8 +439,8 @@ const SalesReport = () => {
                 <div className="space-y-2">
                   {salesReport.top_items.slice(0, 5).map((item: any, index: number) => (
                     <div key={index} className="flex justify-between items-center p-2 bg-orange-50 rounded">
-                      <span className="text-sm text-orange-800">{item.name}</span>
-                      <span className="font-medium text-orange-900">{item.quantity} sold</span>
+                      <span className="text-sm font-medium text-orange-900">{item.name}</span>
+                      <span className="font-bold text-orange-900">{item.quantity} sold</span>
                     </div>
                   ))}
                 </div>
@@ -277,6 +457,98 @@ const SalesReport = () => {
         <X className="w-4 h-4" />
         Close
       </button>
+
+      {/* Order Details Modal */}
+      {showOrderModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              {/* <h3 className="text-xl font-bold text-gray-900">
+                Order Details for {selectedDate}
+              </h3> */}
+ <h3 className="text-xl font-bold text-gray-900">
+  Order Details for {
+    selectedDate
+      ? new Date(new Date(selectedDate).setDate(new Date(selectedDate).getDate() - 1)).toLocaleDateString()
+      : ""
+  }
+</h3>
+              <button
+                onClick={closeOrderModal}
+                className="p-2 hover:bg-gray-100 rounded text-gray-900"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {detailsLoading ? (
+              <div className="text-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-red-600" />
+                <p className="text-gray-600">Loading order details...</p>
+              </div>
+            ) : orderDetails ? (
+              <div>
+                {/* Summary */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="bg-blue-50 p-4 rounded">
+                    <div className="text-sm text-blue-800">Total Orders</div>
+                    <div className="text-lg font-bold text-blue-900">{orderDetails.total_orders}</div>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded">
+                    <div className="text-sm text-green-800">Total Revenue</div>
+                    <div className="text-lg font-bold text-green-900">₹{Number(orderDetails.total_revenue).toFixed(2)}</div>
+                  </div>
+                </div>
+
+                {/* Order Details Table */}
+                {orderDetails.order_details && orderDetails.order_details.length > 0 ? (
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-3">Dish-wise Breakdown:</h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="bg-gray-100">
+                            <th className="border border-gray-300 px-4 py-2 text-left font-medium text-gray-900">Dish Name</th>
+                            <th className="border border-gray-300 px-4 py-2 text-center font-medium text-gray-900">Quantity</th>
+                            <th className="border border-gray-300 px-4 py-2 text-center font-medium text-gray-900">Price per Unit</th>
+                            <th className="border border-gray-300 px-4 py-2 text-right font-medium text-gray-900">Revenue</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {orderDetails.order_details.map((item: any, index: number) => (
+                            <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                              <td className="border border-gray-300 px-4 py-2 text-gray-900">{item.dish_name}</td>
+                              <td className="border border-gray-300 px-4 py-2 text-center text-gray-900">{item.quantity}</td>
+                              <td className="border border-gray-300 px-4 py-2 text-center text-gray-900">₹{Number(item.price_per_unit).toFixed(2)}</td>
+                              <td className="border border-gray-300 px-4 py-2 text-right text-gray-900 font-medium">₹{Number(item.revenue).toFixed(2)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr className="bg-gray-100 font-bold">
+                            <td className="border border-gray-300 px-4 py-2 text-gray-900" colSpan={3}>Total</td>
+                            <td className="border border-gray-300 px-4 py-2 text-right text-gray-900">
+                              ₹{Number(orderDetails.total_revenue).toFixed(2)}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    No order details available for this date.
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-red-600">
+                Failed to load order details.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
