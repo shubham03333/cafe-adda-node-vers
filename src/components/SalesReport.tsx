@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BarChart3, X } from 'lucide-react';
 
 const SalesReport = () => {
@@ -21,6 +21,21 @@ const SalesReport = () => {
       console.error(err);
     }
   };
+
+  useEffect(() => {
+    // Fetch initial data on mount
+    fetchTodaysSales();
+    fetchTotalRevenue();
+
+    // Set interval to refresh data every 30 seconds
+    const intervalId = setInterval(() => {
+      fetchTodaysSales();
+      fetchTotalRevenue();
+    }, 30000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
+  }, []);
 
   const closeReportModal = () => {
     setSalesReport(null);
@@ -203,14 +218,16 @@ const SalesReport = () => {
         <div className="mt-4">
           <h3 className="font-semibold text-gray-900 mb-3">Report Results:</h3>
           <div className="space-y-3">
-            <div className="bg-green-50 p-3 rounded">
-              <div className="text-sm text-green-800">Total Revenue</div>
-              <div className="text-lg font-bold text-green-900">₹{salesReport.total_revenue || 0}</div>
-            </div>
-            
-            <div className="bg-red-50 p-3 rounded">
-              <div className="text-sm text-red-800">Total Orders</div>
-              <div className="text-lg font-bold text-red-900">{salesReport.total_orders || 0}</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-red-50 p-3 rounded">
+                <div className="text-sm text-red-800">Total Orders</div>
+                <div className="text-lg font-bold text-red-900">{salesReport.total_orders || 0}</div>
+              </div>
+              
+              <div className="bg-green-50 p-3 rounded">
+                <div className="text-sm text-green-800">Total Revenue</div>
+                <div className="text-lg font-bold text-green-900">₹{salesReport.total_revenue || 0}</div>
+              </div>
             </div>
             
             {salesReport.daily_sales && salesReport.daily_sales.length > 0 && (
@@ -219,8 +236,15 @@ const SalesReport = () => {
                 <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                   <div className="space-y-2">
                     {salesReport.daily_sales.map((day: any) => (
-                      <div key={day.date} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                        <span className="text-sm text-gray-700">{new Date(day.date).toLocaleDateString()}</span>
+                      <div key={day.date} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <div className="flex items-center space-x-4 flex-1">
+                          <span className="text-sm text-gray-700 min-w-[100px]">
+                            {new Date(day.date).toLocaleDateString()}
+                          </span>
+                          <span className="text-sm font-medium text-gray-800 min-w-[100px]">
+                            {new Date(day.date).toLocaleDateString('en-US', { weekday: 'long' })}
+                          </span>
+                        </div>
                         <span className="font-medium text-gray-900">₹{day.revenue}</span>
                       </div>
                     ))}
