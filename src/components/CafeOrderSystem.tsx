@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Clock, ChefHat, Edit2, Trash2, X, Save, BarChart3 } from 'lucide-react';
+import { Clock, ChefHat, Edit2, Trash2, X, Save, BarChart3, History } from 'lucide-react';
 import { Order, MenuItem, OrderItem, CreateOrderRequest, UpdateOrderRequest } from '@/types';
 
 const CafeOrderSystem = () => {
@@ -24,6 +24,11 @@ const CafeOrderSystem = () => {
   // Confirmation modal state
   const [confirmingDeleteOrder, setConfirmingDeleteOrder] = useState<string | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+
+  // Served orders modal state
+  const [isServedOrdersModalOpen, setIsServedOrdersModalOpen] = useState(false);
+  const [servedOrders, setServedOrders] = useState<Order[]>([]);
+  const [loadingServedOrders, setLoadingServedOrders] = useState(false);
 
   const closeOrderPopup = () => {
     setViewingOrder(null);
@@ -354,6 +359,34 @@ const CafeOrderSystem = () => {
     }
   };
 
+  // Served orders functions
+  const fetchServedOrders = async () => {
+    setLoadingServedOrders(true);
+    try {
+      const response = await fetch('/api/orders?includeServed=true');
+      if (!response.ok) throw new Error('Failed to fetch served orders');
+      const data = await response.json();
+      // Filter only served orders and get the last 5
+      const served = data.filter((order: Order) => order.status === 'served');
+      setServedOrders(served.slice(-5).reverse()); // Get last 5 and reverse to show most recent first
+    } catch (err) {
+      setError('Failed to fetch served orders');
+      console.error(err);
+    } finally {
+      setLoadingServedOrders(false);
+    }
+  };
+
+  const openServedOrdersModal = async () => {
+    setIsServedOrdersModalOpen(true);
+    await fetchServedOrders();
+  };
+
+  const closeServedOrdersModal = () => {
+    setIsServedOrdersModalOpen(false);
+    setServedOrders([]);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -407,6 +440,13 @@ const CafeOrderSystem = () => {
               <div className="text-xs text-white/90">Sales</div>
               <div className="text-lg font-bold text-white">₹{dailySales}</div>
             </div>
+            <button
+              onClick={openServedOrdersModal}
+              className="p-2 bg-white text-red-600 rounded-lg hover:bg-gray-100 transition-colors shadow-md"
+              title="Served Orders History"
+            >
+              <History className="w-5 h-5" />
+            </button>
             <button
               onClick={openReportModal}
               className="p-2 bg-white text-red-600 rounded-lg hover:bg-gray-100 transition-colors shadow-md"
@@ -900,6 +940,64 @@ const CafeOrderSystem = () => {
                 Delete Order
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Served Orders Modal */}
+      {isServedOrdersModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto shadow-xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Recent Served Orders</h2>
+              <button
+                onClick={closeServedOrdersModal}
+                className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {loadingServedOrders ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-4"></div>
+                <div className="text-gray-600">Loading served orders...</div>
+              </div>
+            ) : servedOrders.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <History className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <div>No served orders yet</div>
+                <div className="text-sm mt-2">Orders that have been served will appear here</div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {servedOrders.map(order => (
+                  <div key={order.id} className="p-4 bg-green-50 rounded-lg border border-green-200">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-green-900">#{order.order_number}</span>
+                        <span className="px-2 py-1 bg-green-200 text-green-900 rounded-full text-xs font-semibold">
+                          served
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-green-900">₹{order.total}</div>
+                      </div>
+                    </div>
+                    
+                    <div className="text-sm text-green-800">
+                      {order.items.map(item => (
+                        <div key={item.id} className="flex justify-between py-1">
+                          <span>{item.quantity}x {item.name}</span>
+                          <span>₹{item.price * item.quantity}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

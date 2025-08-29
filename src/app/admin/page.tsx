@@ -379,34 +379,6 @@ const AdminControlPanel = () => {
         )}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         {/* Menu Management Tab */}
         {activeTab === 'menu' && (
           <div className="space-y-6">
@@ -611,7 +583,7 @@ const AdminControlPanel = () => {
         {/* User Management Tab */}
         {activeTab === 'users' && (
           <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">User Management</h2>
+            <h2 className="text-xl text-gray-800 font-semibold mb-4">User Management</h2>
             <UserManagement />
           </div>
         )}
