@@ -187,6 +187,11 @@ const SalesReport = () => {
       case 'today':
         setStartDate(startOfDay.toISOString().split('T')[0]);
         setEndDate(today.toISOString().split('T')[0]);
+
+         // setStartDate(startOfDay.toISOString().split('T')[0]);
+        // setEndDate(today.toISOString().split('T')[0]);
+
+        // new Date(new Date(startOfDay).setDate(new Date(startOfDay).getDate() + 1))
         break;
       case 'thisWeek':
         setStartDate(startOfWeek.toISOString().split('T')[0]);
