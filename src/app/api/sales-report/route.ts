@@ -39,15 +39,46 @@ export async function GET(request: NextRequest) {
       [startDate, endDate]
     ) as any[];
 
-    // Query to get top selling items (this will be more complex since items are stored as JSON)
-    // For now, let's return an empty array for top items
-    const topItems = [] as any[];
+    // Query to get all served orders in the date range
+    const orders = await executeQuery(
+      `SELECT items FROM orders WHERE order_time BETWEEN ? AND ? AND status = 'served'`,
+      [startDate, endDate]
+    ) as any[];
+
+    // Aggregate item quantities across all orders
+    const itemSalesMap: Record<string, { name: string; quantity: number }> = {};
+
+    orders.forEach(order => {
+      let items;
+      try {
+        items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+      } catch (error) {
+        console.warn('Failed to parse items for order:', order.items);
+        return;
+      }
+      if (Array.isArray(items)) {
+        items.forEach((item: any) => {
+          if (item.name && item.quantity) {
+            if (itemSalesMap[item.name]) {
+              itemSalesMap[item.name].quantity += item.quantity;
+            } else {
+              itemSalesMap[item.name] = { name: item.name, quantity: item.quantity };
+            }
+          }
+        });
+      }
+    });
+
+    // Convert to array and sort by quantity descending
+    const topItems = Object.values(itemSalesMap)
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 10);
 
     const result = {
       total_revenue: salesSummary[0]?.total_revenue || 0,
       total_orders: salesSummary[0]?.total_orders || 0,
       daily_sales: dailySales || [],
-      top_items: topItems || []
+      top_items: topItems
     };
 
     return NextResponse.json(result);

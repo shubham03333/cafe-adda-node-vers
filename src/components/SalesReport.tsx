@@ -366,15 +366,15 @@ const SalesReport = () => {
         <div className="mt-4">
           <h3 className="font-semibold text-gray-900 mb-3">Report Results:</h3>
           <div className="space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-red-50 p-3 rounded">
-                <div className="text-sm text-red-800">Total Orders</div>
-                <div className="text-lg font-bold text-red-900">{salesReport.total_orders || 0}</div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                <div className="text-sm font-medium text-red-800 mb-1">Total Orders</div>
+                <div className="text-xl font-bold text-red-900">{salesReport.total_orders || 0}</div>
               </div>
               
-              <div className="bg-green-50 p-3 rounded">
-                <div className="text-sm text-green-800">Total Revenue</div>
-                <div className="text-lg font-bold text-green-900">₹{salesReport.total_revenue || 0}</div>
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <div className="text-sm font-medium text-green-800 mb-1">Total Revenue</div>
+                <div className="text-xl font-bold text-green-900">₹{Number(salesReport.total_revenue || 0).toFixed(2)}</div>
               </div>
             </div>
             
@@ -486,6 +486,39 @@ const SalesReport = () => {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Popular Items Display */}
+            {salesReport.top_items && salesReport.top_items.length > 0 && (
+              <div className="bg-gradient-to-r from-red-50 to-orange-50 p-4 rounded-lg border border-red-200">
+                <h4 className="font-semibold text-red-900 mb-3 text-center">🔥 Popular Items This Period</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {salesReport.top_items.slice(0, 4).map((item: any, index: number) => (
+                    <div key={index} className="bg-white rounded-lg p-3 shadow-sm border border-red-100">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-red-900 truncate max-w-[120px]" title={item.name}>
+                          {item.name}
+                        </span>
+                        <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                          {item.quantity}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        {index === 0 ? '🥇 Most Popular' : 
+                         index === 1 ? '🥈 Runner-up' : 
+                         index === 2 ? '🥉 Third Place' : 'Popular Choice'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {salesReport.top_items[0] && (
+                  <div className="mt-3 text-center">
+                    <div className="text-sm font-bold text-red-800">
+                      #1: {salesReport.top_items[0].name} ({salesReport.top_items[0].quantity} sold)
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

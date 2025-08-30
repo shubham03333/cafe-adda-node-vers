@@ -29,6 +29,7 @@ const CafeOrderSystem = () => {
   const [isServedOrdersModalOpen, setIsServedOrdersModalOpen] = useState(false);
   const [servedOrders, setServedOrders] = useState<Order[]>([]);
   const [loadingServedOrders, setLoadingServedOrders] = useState(false);
+  const [popularItems, setPopularItems] = useState<{name: string; quantity: number}[]>([]);
 
   const closeOrderPopup = () => {
     setViewingOrder(null);
@@ -42,6 +43,7 @@ const CafeOrderSystem = () => {
   useEffect(() => {
     fetchMenu();
     fetchOrders();
+    fetchPopularItems();
     
     // Set up polling for real-time updates
     const pollingInterval = setInterval(() => {
@@ -73,6 +75,22 @@ const CafeOrderSystem = () => {
     } catch (err) {
       console.error('Failed to fetch daily sales:', err);
       setDailySales(0); // Reset to 0 on error
+    }
+  };
+
+  const fetchPopularItems = async () => {
+    try {
+      // Get last 7 days for popular items
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 7);
+      
+      const response = await fetch(`/api/sales-report?startDate=${startDate.toISOString().split('T')[0]}&endDate=${endDate.toISOString().split('T')[0]}`);
+      if (!response.ok) throw new Error('Failed to fetch popular items');
+      const data = await response.json();
+      setPopularItems(data.top_items || []);
+    } catch (err) {
+      console.error('Failed to fetch popular items:', err);
     }
   };
 
@@ -389,10 +407,77 @@ const CafeOrderSystem = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <ChefHat className="w-12 h-12 mx-auto mb-4 animate-pulse" />
-          <div>Loading...</div>
+      <div className="min-h-screen bg-gray-100 p-2 sm:p-4 max-w-md mx-auto">
+        {/* Header Skeleton */}
+        <div className="bg-gradient-to-r from-red-600 to-red-800 rounded-lg shadow-lg p-3 sm:p-4 mb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-red-400/30 rounded-lg animate-pulse"></div>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
+              <div className="p-1.5 sm:p-2 bg-white/20 rounded-lg w-8 h-8 sm:w-10 sm:h-10 animate-pulse"></div>
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-1.5 sm:p-2 min-w-[50px] sm:min-w-[60px] animate-pulse">
+                <div className="h-3 bg-white/30 rounded mb-1"></div>
+                <div className="h-6 bg-white/40 rounded"></div>
+              </div>
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-1.5 sm:p-2 min-w-[50px] sm:min-w-[60px] animate-pulse">
+                <div className="h-3 bg-white/30 rounded mb-1"></div>
+                <div className="h-6 bg-white/40 rounded"></div>
+              </div>
+              <div className="p-1.5 sm:p-2 bg-white/20 rounded-lg w-8 h-8 sm:w-10 sm:h-10 animate-pulse"></div>
+              <div className="p-1.5 sm:p-2 bg-white/20 rounded-lg w-8 h-8 sm:w-10 sm:h-10 animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Menu Grid Skeleton */}
+        <div className="bg-white rounded-lg shadow-lg p-4 mb-4">
+          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4 animate-pulse"></div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            {[...Array(8)].map((_, index) => (
+              <div
+                key={index}
+                className="w-full p-1.5 sm:p-2 rounded-lg min-h-[60px] sm:min-h-[70px] bg-gray-200 animate-pulse"
+              ></div>
+            ))}
+          </div>
+        </div>
+
+        {/* Order Queue Skeleton */}
+        <div className="bg-white rounded-lg shadow-lg p-4">
+          <div className="h-6 bg-gray-200 rounded w-1/2 mb-4 animate-pulse flex items-center gap-2">
+            <div className="w-6 h-6 bg-gray-300 rounded"></div>
+          </div>
+          <div className="space-y-3">
+            {[...Array(3)].map((_, index) => (
+              <div
+                key={index}
+                className="p-4 sm:p-5 rounded-lg bg-gray-100 border-l-4 border-gray-300 animate-pulse"
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-300 rounded"></div>
+                    <div className="h-6 bg-gray-300 rounded w-12"></div>
+                    <div className="h-6 bg-gray-300 rounded w-16"></div>
+                  </div>
+                  <div className="h-6 bg-gray-300 rounded w-16"></div>
+                </div>
+                <div className="mb-3 sm:mb-4 space-y-2">
+                  {[...Array(2)].map((_, itemIndex) => (
+                    <div key={itemIndex} className="flex justify-between items-center py-1 sm:py-2">
+                      <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                      <div className="w-4 h-4 bg-gray-300 rounded"></div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <div className="h-8 bg-gray-300 rounded w-16"></div>
+                  <div className="h-8 bg-gray-300 rounded flex-1"></div>
+                  <div className="h-8 bg-gray-300 rounded w-8"></div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -416,9 +501,9 @@ const CafeOrderSystem = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-2 sm:p-4 max-w-md mx-auto">
+    <div className="min-h-screen bg-gray-100 p-2 sm:p-4 max-w-md mx-auto transition-all duration-300">
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-600 to-red-800 rounded-lg shadow-lg p-3 sm:p-4 mb-4">
+      <div className="bg-gradient-to-r from-red-600 to-red-800 rounded-lg shadow-lg p-3 sm:p-4 mb-4 transition-all duration-300">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="Logo" className="w-16 h-16 sm:w-20 sm:h-20" />
@@ -429,7 +514,7 @@ const CafeOrderSystem = () => {
               className="p-1.5 sm:p-2 bg-white text-red-600 rounded-lg text-xs sm:text-sm hover:bg-gray-100 transition-colors shadow-md flex items-center gap-1"
               title="Chef Dashboard"
             >
-              <span className="hidden sm:inline">Chef</span>
+              <span className="hidden sm:inline">👨‍🍳</span>
               <span className="sm:hidden">👨‍🍳</span>
             </a>
             <div className="bg-white/20 backdrop-blur-sm rounded-lg p-1.5 sm:p-2 min-w-[50px] sm:min-w-[60px]">
@@ -989,8 +1074,8 @@ const CafeOrderSystem = () => {
                     <div className="text-xs sm:text-sm text-green-800">
                       {order.items.map(item => (
                         <div key={item.id} className="flex justify-between py-0.5 sm:py-1">
-                          <span className="truncate max-w-[120px] sm:max-w-[150px]">{item.quantity}x {item.name}</span>
-                          <span>₹{item.price * item.quantity}</span>
+                          <span className="break-words min-w-0 flex-1">{item.quantity}x {item.name}</span>
+                          <span className="ml-2">₹{item.price * item.quantity}</span>
                         </div>
                       ))}
                     </div>
