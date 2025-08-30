@@ -917,8 +917,8 @@ const CafeOrderSystem = () => {
                       <div className="space-y-2">
                         {salesReport.top_items.slice(0, 5).map((item: any, index: number) => (
                           <div key={index} className="flex justify-between items-center p-2 bg-orange-50 rounded">
-                            <span className="text-sm text-orange-800">{item.name}</span>
-                            <span className="font-medium text-orange-900">{item.quantity} sold</span>
+                            <span className="break-words min-w-0 flex-1 text-sm text-orange-800">{item.name}</span>
+                            <span className="ml-2 font-medium text-orange-900">{item.quantity} sold</span>
                           </div>
                         ))}
                       </div>

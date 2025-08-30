@@ -474,22 +474,7 @@ const SalesReport = () => {
                 </div>
               </div>
             )}
-            
-            {salesReport.top_items && salesReport.top_items.length > 0 && (
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Top Selling Items:</h4>
-                <div className="space-y-2">
-                  {salesReport.top_items.slice(0, 5).map((item: any, index: number) => (
-                    <div key={index} className="flex justify-between items-center p-2 bg-orange-50 rounded">
-                      <span className="text-sm font-medium text-orange-900">{item.name}</span>
-                      <span className="font-bold text-orange-900">{item.quantity} sold</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Popular Items Display */}
+                      {/* Popular Items Display */}
             {salesReport.top_items && salesReport.top_items.length > 0 && (
               <div className="bg-gradient-to-r from-red-50 to-orange-50 p-4 rounded-lg border border-red-200">
                 <h4 className="font-semibold text-red-900 mb-3 text-center">🔥 Popular Items This Period</h4>
@@ -497,7 +482,7 @@ const SalesReport = () => {
                   {salesReport.top_items.slice(0, 4).map((item: any, index: number) => (
                     <div key={index} className="bg-white rounded-lg p-3 shadow-sm border border-red-100">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-red-900 truncate max-w-[120px]" title={item.name}>
+                        <span className="break-words min-w-0 flex-1 text-sm font-medium text-red-900" title={item.name}>
                           {item.name}
                         </span>
                         <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full">
@@ -521,6 +506,22 @@ const SalesReport = () => {
                 )}
               </div>
             )}
+            
+            {salesReport.top_items && salesReport.top_items.length > 0 && (
+              <div>
+                <h4 className="font-medium text-gray-900 mb-2">Top Selling Items:</h4>
+                <div className="space-y-2">
+                  {salesReport.top_items.slice(0, 5).map((item: any, index: number) => (
+                    <div key={index} className="flex justify-between items-center p-2 bg-orange-50 rounded">
+                      <span className="text-sm font-medium text-orange-900">{item.name}</span>
+                      <span className="font-bold text-orange-900">{item.quantity} sold</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+  
           </div>
         </div>
       )}
