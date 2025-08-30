@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Save, X, Edit2, Trash2, Plus, BarChart3, Settings, Menu, Users, Package, LogOut, TrendingUp } from 'lucide-react';
+import { Save, X, Edit2, Trash2, Plus, BarChart3, Settings, Menu, Users, Package, LogOut, TrendingUp, Palette, Wifi, WifiOff } from 'lucide-react';
 import Image from 'next/image';
 import { MenuItem } from '@/types';
 import SalesReport from '@/components/SalesReport';
 import InventoryDashboard from '@/components/InventoryDashboard';
-import UserManagement from '@/components/UserManagement'; // Import UserManagement
+import UserManagement from '@/components/UserManagement';
 
 const AdminControlPanel = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -27,6 +27,8 @@ const AdminControlPanel = () => {
   const [totalRevenue, setTotalRevenue] = useState({ total_orders: 0, total_revenue: 0 });
   const [salesLoading, setSalesLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+  const [currentTheme, setCurrentTheme] = useState('light');
   const router = useRouter();
 
   // Check authentication on component mount
@@ -34,9 +36,14 @@ const AdminControlPanel = () => {
     const checkAuth = () => {
       const isLoggedIn = localStorage.getItem('isLoggedIn');
       const userRole = localStorage.getItem('userRole');
+      const savedTheme = localStorage.getItem('theme');
       
       if (isLoggedIn === 'true' && userRole === 'admin') {
         setIsAuthenticated(true);
+        if (savedTheme) {
+          setCurrentTheme(savedTheme);
+          document.documentElement.setAttribute('data-theme', savedTheme);
+        }
         fetchMenu();
         fetchSalesData();
       } else {
@@ -46,6 +53,30 @@ const AdminControlPanel = () => {
 
     checkAuth();
   }, [router]);
+
+  // Online/offline detection
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    setIsOnline(navigator.onLine);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Theme management
+  const toggleTheme = () => {
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    setCurrentTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
@@ -295,17 +326,42 @@ const AdminControlPanel = () => {
               <h1 className="text-xl sm:text-2xl font-bold text-white">Admin Control Panel</h1>
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
+              {/* Theme Switcher */}
+              <button
+                onClick={toggleTheme}
+                className="p-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors touch-manipulation"
+                title={`Switch to ${currentTheme === 'light' ? 'dark' : 'light'} theme`}
+              >
+                <Palette className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+
+              {/* Offline Indicator */}
+              <div className={`p-2 rounded-lg flex items-center gap-1 touch-manipulation ${
+                isOnline 
+                  ? 'bg-green-500/20 text-green-100' 
+                  : 'bg-yellow-500/20 text-yellow-100'
+              }`}>
+                {isOnline ? (
+                  <Wifi className="w-4 h-4 sm:w-5 sm:h-5" />
+                ) : (
+                  <WifiOff className="w-4 h-4 sm:w-5 sm:h-5" />
+                )}
+                <span className="text-xs hidden sm:inline">
+                  {isOnline ? 'Online' : 'Offline'}
+                </span>
+              </div>
+
               <a 
                 href="/" 
-                className="bg-white text-red-600 px-3 py-1 sm:px-4 sm:py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm sm:text-base whitespace-nowrap"
+                className="bg-white text-red-600 px-3 py-2 sm:px-4 sm:py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm sm:text-base whitespace-nowrap touch-manipulation min-h-[44px] flex items-center"
               >
                 Back to Orders
               </a>
               <button
                 onClick={handleLogout}
-                className="bg-red-500 text-white px-3 py-1 sm:px-4 sm:py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base whitespace-nowrap"
+                className="bg-red-500 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center gap-1 sm:gap-2 text-sm sm:text-base whitespace-nowrap touch-manipulation min-h-[44px]"
               >
-                <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
+                <LogOut className="w-4 h-4 sm:w-4 sm:h-4" />
                 Logout
               </button>
             </div>
@@ -333,14 +389,14 @@ const AdminControlPanel = () => {
                   <a
                     key={tab.id}
                     href={tab.href}
-                    className={`px-3 py-2 sm:px-4 sm:py-3 flex items-center gap-1 sm:gap-2 transition-colors whitespace-nowrap ${
+                    className={`px-4 py-3 flex items-center gap-2 transition-colors whitespace-nowrap touch-manipulation min-h-[48px] ${
                         activeTab === tab.id
                           ? 'bg-red-600 text-white'
                           : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
                     }`}
                   >
-                    <IconComponent className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="text-xs sm:text-sm">{tab.label}</span>
+                    <IconComponent className="w-4 h-4" />
+                    <span className="text-sm">{tab.label}</span>
                   </a>
                 );
               }
@@ -349,14 +405,14 @@ const AdminControlPanel = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-3 py-2 sm:px-4 sm:py-3 flex items-center gap-1 sm:gap-2 transition-colors whitespace-nowrap ${
+                  className={`px-4 py-3 flex items-center gap-2 transition-colors whitespace-nowrap touch-manipulation min-h-[48px] ${
                       activeTab === tab.id
                         ? 'bg-red-600 text-white'
                         : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
                   }`}
                 >
-                  <IconComponent className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="text-xs sm:text-sm">{tab.label}</span>
+                  <IconComponent className="w-4 h-4" />
+                  <span className="text-sm">{tab.label}</span>
                 </button>
               );
             })}
@@ -451,7 +507,7 @@ const AdminControlPanel = () => {
               <div className="flex gap-3">
                 <button
                   onClick={saveMenuItem}
-                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors flex items-center gap-2"
+                  className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 touch-manipulation min-h-[48px]"
                 >
                   <Save className="w-4 h-4" />
                   {editingItem ? 'Update Item' : 'Add Item'}
@@ -460,7 +516,7 @@ const AdminControlPanel = () => {
                 {editingItem && (
                   <button
                     onClick={() => setEditingItem(null)}
-                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors flex items-center gap-2"
+                    className="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors flex items-center gap-2 touch-manipulation min-h-[48px]"
                   >
                     <X className="w-4 h-4" />
                     Cancel Edit
@@ -477,7 +533,7 @@ const AdminControlPanel = () => {
                   <button
                     onClick={saveMenuPositions}
                     disabled={isSavingPositions}
-                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center gap-2 touch-manipulation min-h-[48px]"
                   >
                     <Save className="w-4 h-4" />
                     {isSavingPositions ? 'Saving...' : 'Save Positions'}

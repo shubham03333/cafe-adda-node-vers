@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Clock, ChefHat, Edit2, Trash2, X, Save, BarChart3, History } from 'lucide-react';
+import { Clock, ChefHat, Edit2, Trash2, X, Save, BarChart3, History, Wifi, WifiOff } from 'lucide-react';
 import { Order, MenuItem, OrderItem, CreateOrderRequest, UpdateOrderRequest } from '@/types';
+import { useOfflineStatus } from '@/hooks/useOfflineStatus';
 
 const CafeOrderSystem = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -14,6 +15,9 @@ const CafeOrderSystem = () => {
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
+  
+  // Offline status
+  const isOffline = useOfflineStatus();
   
   // Sales report modal state
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -509,6 +513,27 @@ const CafeOrderSystem = () => {
             <img src="/logo.png" alt="Logo" className="w-16 h-16 sm:w-20 sm:h-20" />
           </div>
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
+            {/* Offline Status Indicator */}
+            <div className="relative">
+              <button
+                className={`p-1.5 sm:p-2 rounded-lg shadow-md transition-colors ${
+                  isOffline 
+                    ? 'bg-red-500 text-white hover:bg-red-600' 
+                    : 'bg-green-500 text-white hover:bg-green-600'
+                }`}
+                title={isOffline ? 'Offline Mode' : 'Online Mode'}
+              >
+                {isOffline ? (
+                  <WifiOff className="w-4 h-4 sm:w-5 sm:h-5" />
+                ) : (
+                  <Wifi className="w-4 h-4 sm:w-5 sm:h-5" />
+                )}
+              </button>
+              {isOffline && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></div>
+              )}
+            </div>
+
             <a 
               href="/chef" 
               className="p-1.5 sm:p-2 bg-white text-red-600 rounded-lg text-xs sm:text-sm hover:bg-gray-100 transition-colors shadow-md flex items-center gap-1"

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import CafeOrderSystem from '@/components/CafeOrderSystem';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
 export default function DashboardPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -43,7 +44,9 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <CafeOrderSystem />
+      <ThemeProvider>
+        <CafeOrderSystem />
+      </ThemeProvider>
     </div>
   );
 }
