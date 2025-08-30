@@ -416,43 +416,43 @@ const CafeOrderSystem = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-2 max-w-md mx-auto">
+    <div className="min-h-screen bg-gray-100 p-2 sm:p-4 max-w-md mx-auto">
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-600 to-red-800 rounded-lg shadow-lg p-2 mb-3">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
+      <div className="bg-gradient-to-r from-red-600 to-red-800 rounded-lg shadow-lg p-3 sm:p-4 mb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="Logo" className="w-22 h-22 mb-0 sm:mb-4" />
+            <img src="/logo.png" alt="Logo" className="w-16 h-16 sm:w-20 sm:h-20" />
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center">
             <a 
               href="/chef" 
-              className="p-2 bg-white text-red-600 rounded-lg text-sm hover:bg-gray-100 transition-colors shadow-md flex items-center gap-1"
+              className="p-1.5 sm:p-2 bg-white text-red-600 rounded-lg text-xs sm:text-sm hover:bg-gray-100 transition-colors shadow-md flex items-center gap-1"
               title="Chef Dashboard"
             >
-              <span className="hidden sm:inline"></span>
-              👨‍🍳
+              <span className="hidden sm:inline">Chef</span>
+              <span className="sm:hidden">👨‍🍳</span>
             </a>
-            <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2">
+            <div className="bg-white/20 backdrop-blur-sm rounded-lg p-1.5 sm:p-2 min-w-[50px] sm:min-w-[60px]">
               <div className="text-xs text-white/90">Pending</div>
-              <div className="text-lg font-bold text-white">{pendingOrdersCount}</div>
+              <div className="text-base sm:text-lg font-bold text-white">{pendingOrdersCount}</div>
             </div>
-            <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2">
+            <div className="bg-white/20 backdrop-blur-sm rounded-lg p-1.5 sm:p-2 min-w-[50px] sm:min-w-[60px]">
               <div className="text-xs text-white/90">Sales</div>
-              <div className="text-lg font-bold text-white">₹{dailySales}</div>
+              <div className="text-base sm:text-lg font-bold text-white">₹{dailySales}</div>
             </div>
             <button
               onClick={openServedOrdersModal}
-              className="p-2 bg-white text-red-600 rounded-lg hover:bg-gray-100 transition-colors shadow-md"
+              className="p-1.5 sm:p-2 bg-white text-red-600 rounded-lg hover:bg-gray-100 transition-colors shadow-md"
               title="Served Orders History"
             >
-              <History className="w-5 h-5" />
+              <History className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             <button
               onClick={openReportModal}
-              className="p-2 bg-white text-red-600 rounded-lg hover:bg-gray-100 transition-colors shadow-md"
+              className="p-1.5 sm:p-2 bg-white text-red-600 rounded-lg hover:bg-gray-100 transition-colors shadow-md"
               title="Sales Report"
             >
-              <BarChart3 className="w-5 h-5" />
+              <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
@@ -460,43 +460,43 @@ const CafeOrderSystem = () => {
 
       {/* Building Order Section */}
       {buildingOrder.length > 0 && (
-        <div className="bg-red-100 rounded-lg p-4 mb-4 border-2 border-red-300">
-          <h3 className="font-semibold text-red-900 mb-2">Building Order:</h3>
+        <div className="bg-red-100 rounded-lg p-3 mb-4 border-2 border-red-300">
+          <h3 className="font-semibold text-red-900 mb-2 text-base">Building Order:</h3>
           {buildingOrder.map(item => (
             <div key={item.id} className="flex justify-between items-center py-2 border-b border-red-300">
-              <span className="text-red-900 font-medium">{item.name}</span>
-              <div className="flex items-center gap-2">
+              <span className="text-red-900 font-medium text-xs sm:text-sm">{item.name}</span>
+              <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => updateBuildingOrderItemQuantity(item.id, item.quantity - 1)}
-                  className="w-6 h-6 bg-red-600 text-white rounded flex items-center justify-center hover:bg-red-700 transition-colors text-sm"
+                  className="w-6 h-6 sm:w-7 sm:h-7 bg-red-600 text-white rounded flex items-center justify-center hover:bg-red-700 transition-colors text-xs font-bold"
                 >
                   -
                 </button>
-                <span className="w-6 text-center font-semibold text-red-900 text-sm">{item.quantity}</span>
+                <span className="w-6 text-center font-semibold text-red-900 text-xs sm:text-sm">{item.quantity}</span>
                 <button
                   onClick={() => updateBuildingOrderItemQuantity(item.id, item.quantity + 1)}
-                  className="w-6 h-6 bg-red-600 text-white rounded flex items-center justify-center hover:bg-red-700 transition-colors text-sm"
+                  className="w-6 h-6 sm:w-7 sm:h-7 bg-red-600 text-white rounded flex items-center justify-center hover:bg-red-700 transition-colors text-xs font-bold"
                 >
                   +
                 </button>
-                <span className="font-medium text-red-900 w-16 text-right">₹{item.price * item.quantity}</span>
+                <span className="font-medium text-red-900 w-12 sm:w-16 text-right text-xs sm:text-sm">₹{item.price * item.quantity}</span>
                 <button
                   onClick={() => removeItemFromBuildingOrder(item.id)}
-                  className="p-2 text-red-600 hover:text-red-800 hover:bg-red-100 rounded transition-colors"
+                  className="p-1 text-red-600 hover:text-red-800 hover:bg-red-100 rounded transition-colors"
                   title="Remove item"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3 h-3 sm:w-3 sm:h-3" />
                 </button>
               </div>
             </div>
           ))}
-          <div className="border-t border-red-300 pt-2 mt-2 flex justify-between items-center">
-            <span className="font-bold text-red-900">
+          <div className="border-t border-red-300 pt-2 mt-2 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <span className="font-bold text-red-900 text-base">
               Total: ₹{buildingOrder.reduce((sum, item) => sum + (item.price * item.quantity), 0)}
             </span>
             <button 
               onClick={placeOrder}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700"
+              className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 w-full sm:w-auto text-sm"
             >
               Place Order
             </button>
@@ -598,18 +598,18 @@ const CafeOrderSystem = () => {
                     ₹{editingOrder.total}
                   </div>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-2 sm:gap-3 flex-col sm:flex-row">
                   <button
                     onClick={cancelEdit}
-                    className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-all duration-200 transform hover:scale-105 border border-gray-300"
+                    className="px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-all duration-200 border border-gray-300 text-xs sm:text-sm"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={saveEditedOrder}
-                    className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-800 text-white rounded-lg font-medium hover:from-red-700 hover:to-red-900 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center gap-2"
+                    className="px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-red-600 to-red-800 text-white rounded-lg font-medium hover:from-red-700 hover:to-red-900 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-1.5 justify-center text-xs sm:text-sm"
                   >
-                    <Save className="w-5 h-5" />
+                    <Save className="w-3 h-3 sm:w-4 sm:h-4" />
                     Save Changes
                   </button>
                 </div>
@@ -631,19 +631,19 @@ const CafeOrderSystem = () => {
       <div className="bg-white rounded-lg shadow-lg p-4 mb-4">
         <h2 className="font-semibold text-gray-800 text-lg mb-4">Menu Items</h2>
         
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
           {menuItems.map(item => (
             <button
               key={item.id}
               onClick={() => addToOrder(item, 1)}
-              className="w-full p-4 rounded-lg text-center font-medium min-h-[90px] flex flex-col justify-center transition-all duration-300 shadow-md hover:shadow-lg bg-gradient-to-br from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 cursor-pointer hover:scale-105"
+              className="w-full p-1.5 sm:p-2 rounded-lg text-center font-medium min-h-[60px] sm:min-h-[70px] flex flex-col justify-center transition-all duration-300 shadow-md hover:shadow-lg bg-gradient-to-br from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 cursor-pointer hover:scale-105"
             >
-              <div className="font-semibold text-sm leading-tight px-1 overflow-hidden" style={{ 
+              <div className="font-semibold text-[10px] sm:text-[11px] leading-tight px-0.5 overflow-hidden" style={{ 
                 display: '-webkit-box',
                 WebkitLineClamp: 2,
                 WebkitBoxOrient: 'vertical'
               }}>{item.name}</div>
-              <div className="text-xs opacity-90 mt-2 bg-white/20 rounded px-1 py-0.5">₹{item.price}</div>
+              <div className="text-[9px] sm:text-[10px] opacity-90 mt-0.5 bg-white/20 rounded px-0.5 py-0.5">₹{item.price}</div>
             </button>
           ))}
         </div>
@@ -664,18 +664,18 @@ const CafeOrderSystem = () => {
           </div>
         ) : (
           <div ref={ordersContainerRef} className="mt-2" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-            <div className="space-y-4 pr-1">
+            <div className="space-y-3 pr-1">
               {orders.map(order => (
                 <div 
                   key={order.id} 
-                  className="p-5 rounded-lg border-l-4 border-red-500 bg-gradient-to-r from-red-50 to-white shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer"
+                  className="p-4 sm:p-5 rounded-lg border-l-4 border-red-500 bg-gradient-to-r from-red-50 to-white shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer"
                   onClick={() => handleOrderClick(order)}
                 >
                   <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-center gap-3">
-                      <Clock className="w-6 h-6 text-red-700" />
-                      <span className="font-bold text-xl text-red-900">#{order.order_number}</span>
-                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-red-700" />
+                      <span className="font-bold text-lg sm:text-xl text-red-900">#{order.order_number}</span>
+                      <span className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold ${
                         order.status === 'preparing' 
                           ? 'bg-yellow-200 text-yellow-900' 
                           : order.status === 'ready' 
@@ -688,23 +688,23 @@ const CafeOrderSystem = () => {
                       </span>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-xl text-red-900">₹{order.total}</div>
+                      <div className="font-bold text-lg sm:text-xl text-red-900">₹{order.total}</div>
                     </div>
                   </div>
                   
-                  <div className="mb-4">
+                  <div className="mb-3 sm:mb-4">
                     {order.items.map(item => (
-                      <div key={item.id} className="flex justify-between items-center text-sm text-red-800 py-2 border-b border-red-100 last:border-b-0">
+                      <div key={item.id} className="flex justify-between items-center text-xs sm:text-sm text-red-800 py-1 sm:py-2 border-b border-red-100 last:border-b-0">
                         <span className="font-medium">{item.quantity}x {item.name}</span>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             removeItemFromOrder(order.id, item.id);
                           }}
-                          className="p-2 text-red-600 hover:text-red-800 hover:bg-red-100 rounded-full transition-colors"
+                          className="p-1.5 sm:p-2 text-red-600 hover:text-red-800 hover:bg-red-100 rounded-full transition-colors"
                           title="Remove item"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                         </button>
                       </div>
                     ))}
@@ -716,10 +716,10 @@ const CafeOrderSystem = () => {
                         e.stopPropagation();
                         editOrder(order);
                       }}
-                      className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center gap-1 text-sm"
+                      className="px-2 py-1.5 sm:px-3 sm:py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center gap-1 text-xs sm:text-sm"
                       title="Edit order"
                     >
-                      <Edit2 className="w-3 h-3" />
+                      <Edit2 className="w-3 h-3 sm:w-3 sm:h-3" />
                       Edit
                     </button>
                     <button
@@ -727,7 +727,7 @@ const CafeOrderSystem = () => {
                         e.stopPropagation();
                         updateOrderStatus(order.id, 'served');
                       }}
-                      className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors text-sm"
+                      className="flex-1 py-1.5 sm:py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors text-xs sm:text-sm"
                     >
                       Served
                     </button>
@@ -736,10 +736,10 @@ const CafeOrderSystem = () => {
                         e.stopPropagation();
                         openConfirmModal(order.id);
                       }}
-                      className="px-1.5 py-0.5 bg-red-600 hover:bg-red-700 text-white rounded-md font-medium transition-colors flex items-center gap-0.5 text-xs"
+                      className="px-1.5 py-1 sm:px-1.5 sm:py-0.5 bg-red-600 hover:bg-red-700 text-white rounded-md font-medium transition-colors flex items-center gap-0.5 text-xs"
                       title="Delete order"
                     >
-                      <Trash2 className="w-2.5 h-2.5" />
+                      <Trash2 className="w-2.5 h-2.5 sm:w-2.5 sm:h-2.5" />
                       Delete
                     </button>
                   </div>
@@ -926,16 +926,16 @@ const CafeOrderSystem = () => {
               </p>
             </div>
 
-            <div className="flex gap-3 justify-end">
+            <div className="flex gap-2 sm:gap-3 justify-end flex-col sm:flex-row">
               <button
                 onClick={closeConfirmModal}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-400 transition-colors"
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-400 transition-colors text-sm sm:text-base"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors text-sm sm:text-base"
               >
                 Delete Order
               </button>
@@ -947,49 +947,49 @@ const CafeOrderSystem = () => {
       {/* Served Orders Modal */}
       {isServedOrdersModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto shadow-xl">
+          <div className="bg-white rounded-lg p-4 sm:p-6 max-w-md w-full max-h-[80vh] overflow-y-auto shadow-xl">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Recent Served Orders</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900">Recent Served Orders</h2>
               <button
                 onClick={closeServedOrdersModal}
-                className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
                 title="Close"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
 
             {loadingServedOrders ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-4"></div>
-                <div className="text-gray-600">Loading served orders...</div>
+                <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-red-600 mx-auto mb-3 sm:mb-4"></div>
+                <div className="text-sm sm:text-base text-gray-600">Loading served orders...</div>
               </div>
             ) : servedOrders.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                <History className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <div>No served orders yet</div>
-                <div className="text-sm mt-2">Orders that have been served will appear here</div>
+                <History className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 opacity-50" />
+                <div className="text-sm sm:text-base">No served orders yet</div>
+                <div className="text-xs sm:text-sm mt-1 sm:mt-2">Orders that have been served will appear here</div>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {servedOrders.map(order => (
-                  <div key={order.id} className="p-4 bg-green-50 rounded-lg border border-green-200">
+                  <div key={order.id} className="p-3 sm:p-4 bg-green-50 rounded-lg border border-green-200">
                     <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-green-900">#{order.order_number}</span>
-                        <span className="px-2 py-1 bg-green-200 text-green-900 rounded-full text-xs font-semibold">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <span className="font-bold text-green-900 text-sm sm:text-base">#{order.order_number}</span>
+                        <span className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-green-200 text-green-900 rounded-full text-xs font-semibold">
                           served
                         </span>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-green-900">₹{order.total}</div>
+                        <div className="font-bold text-green-900 text-sm sm:text-base">₹{order.total}</div>
                       </div>
                     </div>
                     
-                    <div className="text-sm text-green-800">
+                    <div className="text-xs sm:text-sm text-green-800">
                       {order.items.map(item => (
-                        <div key={item.id} className="flex justify-between py-1">
-                          <span>{item.quantity}x {item.name}</span>
+                        <div key={item.id} className="flex justify-between py-0.5 sm:py-1">
+                          <span className="truncate max-w-[120px] sm:max-w-[150px]">{item.quantity}x {item.name}</span>
                           <span>₹{item.price * item.quantity}</span>
                         </div>
                       ))}

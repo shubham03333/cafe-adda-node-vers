@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, X, Loader2 } from 'lucide-react';
+import { BarChart3, X, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const SalesReport = () => {
   const [startDate, setStartDate] = useState('');
@@ -17,6 +17,8 @@ const SalesReport = () => {
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
 
   // Update current time with IST formatting
   useEffect(() => {
@@ -44,6 +46,7 @@ const SalesReport = () => {
       if (!response.ok) throw new Error('Failed to generate sales report');
       const data = await response.json();
       setSalesReport(data);
+      setCurrentPage(1); // Reset to first page when new report is generated
     } catch (err) {
       setError('Failed to generate sales report');
       console.error(err);
@@ -59,11 +62,16 @@ const SalesReport = () => {
     const intervalId = setInterval(() => {
       fetchTodaysSales();
       fetchTotalRevenue();
-    }, 15000);
+    }, 30000);
 
     // Cleanup interval on unmount
     return () => clearInterval(intervalId);
   }, []);
+
+  // Reset to first page when sorting changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortBy, sortOrder]);
 
   const closeReportModal = () => {
     setSalesReport(null);
@@ -392,48 +400,77 @@ const SalesReport = () => {
                     </button>
                   </div>
                 </div>
-                <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                <div>
                   <div className="space-y-2">
-{salesReport.daily_sales
-  .sort((a: any, b: any) => {
-    let aValue, bValue;
-    
-    if (sortBy === 'date') {
-      aValue = new Date(a.date).getTime();
-      bValue = new Date(b.date).getTime();
-    } else if (sortBy === 'day') {
-      aValue = new Date(a.date).toLocaleDateString('en-US', { weekday: 'long' });
-      bValue = new Date(b.date).toLocaleDateString('en-US', { weekday: 'long' });
-    } else {
-      aValue = a.revenue;
-      bValue = b.revenue;
-    }
-    
-    if (sortOrder === 'asc') {
-      return aValue > bValue ? 1 : -1;
-    } else {
-      return aValue < bValue ? 1 : -1;
-    }
-  })
-  .map((day: any) => (
-  <div
-    key={day.date}
-    className="flex items-center justify-between p-2 bg-gray-50 rounded cursor-pointer hover:bg-gray-100"
-    onClick={() => fetchDailyOrderDetails(day.date)}
-    title="Click to view order details"
-  >
-    <div className="flex items-center space-x-4 flex-1">
-      <span className="text-sm text-gray-800 min-w-[100px]">
-        {new Date(day.date).toLocaleDateString()}
-      </span>
-      <span className="text-sm font-medium text-gray-900 min-w-[100px]">
-        {new Date(day.date).toLocaleDateString('en-US', { weekday: 'long' })}
-      </span>
-    </div>
-    <span className="font-bold text-gray-900">₹{day.revenue}</span>
-  </div>
-))}
+                    {salesReport.daily_sales
+                      .sort((a: any, b: any) => {
+                        let aValue, bValue;
+                        
+                        if (sortBy === 'date') {
+                          aValue = new Date(a.date).getTime();
+                          bValue = new Date(b.date).getTime();
+                        } else if (sortBy === 'day') {
+                          aValue = new Date(a.date).toLocaleDateString('en-US', { weekday: 'long' });
+                          bValue = new Date(b.date).toLocaleDateString('en-US', { weekday: 'long' });
+                        } else {
+                          aValue = a.revenue;
+                          bValue = b.revenue;
+                        }
+                        
+                        if (sortOrder === 'asc') {
+                          return aValue > bValue ? 1 : -1;
+                        } else {
+                          return aValue < bValue ? 1 : -1;
+                        }
+                      })
+                      .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                      .map((day: any) => (
+                        <div
+                          key={day.date}
+                          className="flex items-center justify-between p-2 bg-gray-50 rounded cursor-pointer hover:bg-gray-100"
+                          onClick={() => fetchDailyOrderDetails(day.date)}
+                          title="Click to view order details"
+                        >
+                          <div className="flex items-center flex-1">
+                            <span className="text-sm text-gray-800 min-w-[85px] mr-2">
+                              {new Date(day.date).toLocaleDateString()}
+                            </span>
+                            <span className="text-sm font-medium text-gray-900 min-w-[70px] mr-3">
+                              {new Date(day.date).toLocaleDateString('en-US', { weekday: 'long' })}
+                            </span>
+                          </div>
+                          <span className="font-bold text-gray-900 ml-1">₹{day.revenue}</span>
+                        </div>
+                      ))}
                   </div>
+                  
+                  {/* Pagination Controls */}
+                  {salesReport.daily_sales.length > itemsPerPage && (
+                    <div className="flex items-center justify-between mt-4">
+                      <div className="text-sm text-gray-600">
+                        Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, salesReport.daily_sales.length)} of {salesReport.daily_sales.length} entries
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                          disabled={currentPage === 1}
+                          className="p-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <span className="text-sm font-medium">
+                          Page {currentPage} of {Math.ceil(salesReport.daily_sales.length / itemsPerPage)}
+                        </span>
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(salesReport.daily_sales.length / itemsPerPage)))}
+                          disabled={currentPage === Math.ceil(salesReport.daily_sales.length / itemsPerPage)}
+                          className="p-1 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
